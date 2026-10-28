@@ -1,9 +1,11 @@
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import PROJECT_ROOT, Settings, settings
+from app.core.errors import ConflictError, NotFoundError
 from app.core.root_path import RootPathMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
 from app.core.spa import mount_spa
@@ -13,9 +15,18 @@ from app.routers import settings as settings_router
 DIST_DIR = PROJECT_ROOT / "frontend" / "dist"
 
 
+def domain_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Servis katmanının HTTP bilmeyen hatalarını {"detail": "..."} JSON'una çevirir."""
+    status = 404 if isinstance(exc, NotFoundError) else 409
+    return JSONResponse({"detail": str(exc)}, status_code=status)
+
+
 def create_app(settings_obj: Settings | None = None, dist_dir: Path | None = None) -> FastAPI:
     cfg = settings_obj or settings
     app = FastAPI(title="Patent Takip")
+
+    app.add_exception_handler(NotFoundError, domain_error_handler)
+    app.add_exception_handler(ConflictError, domain_error_handler)
 
     @app.get("/api/health", tags=["health"])
     def health():

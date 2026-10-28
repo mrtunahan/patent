@@ -14,3 +14,26 @@ def normalize_tr(value: str) -> str:
     value = value.replace("İ", "i").replace("I", "ı")
     value = unicodedata.normalize("NFC", value.casefold())
     return " ".join(value.split())
+
+
+# Türkçe alfabe sırası (q, w, x uluslararası konumlarında); ICU "tr" harmanlamasıyla uyumlu.
+_TR_ALPHABET = "abcçdefgğhıijklmnoöpqrsştuüvwxyz"
+_TR_RANK = {char: index for index, char in enumerate(_TR_ALPHABET)}
+
+
+def turkish_sort_key(value: str) -> tuple[tuple[int, int], ...]:
+    """Türkçe alfabe sırasına göre sıralama anahtarı (büyük/küçük harf duyarsız).
+
+    normalize_tr çıktısını kullanır. Boşluk, rakam ve noktalama harflerden önce gelir;
+    Türkçe alfabede olmayan harfler en sona kod noktasına göre sıralanır.
+    Düz normalize_tr çıktısı kod noktasına göre sıralanırsa ç/ğ/ı/ö/ş/ü harfleri z'den sonra düşer.
+    """
+    key = []
+    for char in normalize_tr(value):
+        if char in _TR_RANK:
+            key.append((2, _TR_RANK[char]))
+        elif char.isalpha():
+            key.append((3, ord(char)))
+        else:
+            key.append((1, ord(char)))
+    return tuple(key)

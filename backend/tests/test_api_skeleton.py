@@ -31,14 +31,20 @@ SKELETON = [
     ("GET", "/api/settings", None),
     ("PUT", "/api/settings", {"institution_name": "ÇAKÜ"}),
 ]
+# Gerçek mantığı yazılmış router'lar artık 501 vermez; kendi test dosyalarında sınanır.
+IMPLEMENTED = {"departments"}
+ALL_ROUTES = list(SKELETON)
 for _name, _body in LOOKUP_BODIES.items():
-    SKELETON += [
+    _routes = [
         ("GET", f"/api/{_name}", None),
         ("POST", f"/api/{_name}", _body),
         ("GET", f"/api/{_name}/1", None),
         ("PUT", f"/api/{_name}/1", _body),
         ("DELETE", f"/api/{_name}/1", None),
     ]
+    ALL_ROUTES += _routes
+    if _name not in IMPLEMENTED:
+        SKELETON += _routes
 
 
 @pytest.fixture(autouse=True)
@@ -89,7 +95,7 @@ def test_skeleton_endpoints_return_501(client, method, path, body):
 
 def test_every_skeleton_route_is_in_openapi(client):
     paths = client.get("/openapi.json").json()["paths"]
-    for method, path, _ in SKELETON:
+    for method, path, _ in ALL_ROUTES:  # iskelet + gerçek uçlar: Madde 7 tablosu eksiksiz
         template = path
         for name in ("patents", "applicants", "departments", "fsmh_types", "attorney_firms"):
             if path.startswith(f"/api/{name}/1"):

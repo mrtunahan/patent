@@ -204,3 +204,34 @@ def test_known_limit_lowercase_dotted_i_with_combining_dot_is_not_folded():
     """
     assert normalize_tr("i̇stanbul") != normalize_tr("istanbul")
     assert normalize_tr("i̇stanbul") == "i̇stanbul"
+
+
+# --- turkish_sort_key ---
+
+def test_turkish_sort_key_orders_by_turkish_alphabet():
+    from app.core.text import turkish_sort_key
+
+    names = ["Zonguldak", "Çankırı", "Ankara", "Şabanözü", "Sivas", "Ödemiş", "Işık", "İzmir",
+             "Ulus", "Üsküdar", "Gazi", "Ğ", "Hukuk", "Cumhuriyet", "Dicle"]
+    expected = ["Ankara", "Cumhuriyet", "Çankırı", "Dicle", "Gazi", "Ğ", "Hukuk", "Işık", "İzmir",
+                "Ödemiş", "Sivas", "Şabanözü", "Ulus", "Üsküdar", "Zonguldak"]
+    assert sorted(names, key=turkish_sort_key) == expected
+    # düz normalize_tr kod noktası sırası bunu bozardı (ç, ş, ö, ü, ğ, ı, z'den sonra)
+    assert sorted(names, key=normalize_tr) != expected
+
+
+def test_turkish_sort_key_dotless_i_before_dotted_i_and_case_insensitive():
+    from app.core.text import turkish_sort_key
+
+    assert turkish_sort_key("ISPARTA") < turkish_sort_key("İSTANBUL")  # ı < i
+    assert turkish_sort_key("ışık") == turkish_sort_key("IŞIK")
+    assert turkish_sort_key("Çankırı  Üni") == turkish_sort_key("çankırı üni")
+
+
+def test_turkish_sort_key_prefix_digits_and_foreign_letters():
+    from app.core.text import turkish_sort_key
+
+    assert turkish_sort_key("Ankara") < turkish_sort_key("Ankara Üni.")
+    assert turkish_sort_key("2. Bölüm") < turkish_sort_key("A Bölümü")
+    assert turkish_sort_key("Pak") < turkish_sort_key("Qwe") < turkish_sort_key("Rak")
+    assert turkish_sort_key("z") < turkish_sort_key("â")  # Türkçe alfabe dışı harf en sona
