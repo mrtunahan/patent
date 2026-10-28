@@ -43,5 +43,6 @@ class Patent(Base):
     fsmh_type: Mapped[FsmhType] = relationship()
     attorney_firm: Mapped[AttorneyFirm | None] = relationship()
     partners: Mapped[list[PatentPartner]] = relationship(
-        back_populates="patent", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="patent", cascade="all, delete-orphan", passive_deletes=True,
+        order_by="PatentPartner.id",
     )

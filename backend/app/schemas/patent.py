@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 from pydantic import BeforeValidator, Field, model_validator
 
 from app.schemas.common import (
+    ForeignId,
     InSchema,
     OptionalText,
     Page,
@@ -17,10 +18,10 @@ from app.schemas.common import (
 
 class PatentIn(InSchema):
     title: RequiredStr500
-    applicant_id: int
-    fsmh_type_id: int
-    department_id: int | None = None
-    attorney_firm_id: int | None = None
+    applicant_id: ForeignId
+    fsmh_type_id: ForeignId
+    department_id: ForeignId | None = None
+    attorney_firm_id: ForeignId | None = None
     application_date: date | None = None  # boş ve gelecek tarih geçerli (Madde 6/3)
     notes: OptionalText = None
     # Normalize edilmiş tekrar kontrolü servis katmanında yapılacak.

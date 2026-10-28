@@ -139,7 +139,7 @@ def test_non_get_methods_do_not_fall_back(client):
     r = client.post("/api/health")
     assert r.status_code == 405  # gerçek yol için hâlâ 405
     assert client.post("/api/yok").status_code == 404  # bilinmeyen /api yolu: 404 JSON
-    assert client.post("/api/patents", json={"title": "T", "applicant_id": 1, "fsmh_type_id": 1}).status_code == 501
+    assert client.put("/api/settings", json={"institution_name": "X"}).status_code == 501
 
 
 def test_head_requests(client):

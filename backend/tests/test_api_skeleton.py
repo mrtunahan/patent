@@ -23,17 +23,18 @@ LOOKUP_BODIES = {
 
 # Madde 7 tablosu: (metot, yol, gövde)
 SKELETON = [
-    ("GET", "/api/patents", None),
-    ("POST", "/api/patents", PATENT_BODY),
-    ("GET", "/api/patents/1", None),
-    ("PUT", "/api/patents/1", PATENT_BODY),
-    ("DELETE", "/api/patents/1", None),
+    ("GET", "/api/patents", None),  # liste: Adım 6'ya kadar iskelet (501)
     ("GET", "/api/settings", None),
     ("PUT", "/api/settings", {"institution_name": "ÇAKÜ"}),
 ]
 # Gerçek mantığı yazılmış router'lar artık 501 vermez; kendi test dosyalarında sınanır.
 IMPLEMENTED = {"departments", "fsmh_types", "attorney_firms", "applicants"}
-ALL_ROUTES = list(SKELETON)
+ALL_ROUTES = list(SKELETON) + [  # patent yazma uçları gerçek (test_patents.py)
+    ("POST", "/api/patents", PATENT_BODY),
+    ("GET", "/api/patents/1", None),
+    ("PUT", "/api/patents/1", PATENT_BODY),
+    ("DELETE", "/api/patents/1", None),
+]
 for _name, _body in LOOKUP_BODIES.items():
     _routes = [
         ("GET", f"/api/{_name}", None),
