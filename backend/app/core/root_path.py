@@ -2,9 +2,12 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 
 class RootPathMiddleware:
-    """scope["root_path"] değerini ROOT_PATH'ten ayarlar (proxy prefix'i siler varsayımı).
+    """ROOT_PATH'i ASGI scope'a uygular (proxy prefix'i siler varsayımı).
 
-    FastAPI(root_path=...) kullanımdan kaldırıldığı için bu şekilde uygulanır.
+    Güncel ASGI/Starlette anlayışında scope["path"], root_path önekini İÇERİR (uvicorn --root-path
+    da böyle yapar); Mount/StaticFiles yol çözümü buna dayanır. Proxy öneki sildiği için gelen yol
+    prefix'sizdir: burada root_path ayarlanır ve öneki path/raw_path'e geri eklenir. Starlette
+    yönlendirmede öneki tekrar çıkarır, böylece uygulama yolları prefix'siz kalır.
     ROOT_PATH boşsa scope'a dokunulmaz (örn. uvicorn --root-path çalışmaya devam eder).
     """
 
@@ -14,5 +17,7 @@ class RootPathMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if self.root_path and scope["type"] in ("http", "websocket"):
-            scope = {**scope, "root_path": self.root_path}
+            scope = {**scope, "root_path": self.root_path, "path": self.root_path + scope["path"]}
+            if "raw_path" in scope and scope["raw_path"] is not None:
+                scope["raw_path"] = self.root_path.encode("latin-1") + scope["raw_path"]
         await self.app(scope, receive, send)

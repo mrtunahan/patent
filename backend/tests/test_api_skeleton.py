@@ -260,3 +260,35 @@ def test_root_path_applies_to_error_responses_too():
 def test_root_path_default_empty_has_no_servers_prefix(client):
     spec = client.get("/openapi.json").json()
     assert spec.get("servers") in (None, [])
+
+
+# --- RootPathMiddleware: path önekini geri ekler (proxy prefix'i siler varsayımı) ---
+
+def _run_root_path_middleware(root_path, scope):
+    import asyncio
+
+    from app.core.root_path import RootPathMiddleware
+
+    captured = {}
+
+    async def inner(received_scope, receive, send):
+        captured.update(received_scope)
+
+    asyncio.run(RootPathMiddleware(inner, root_path)(scope, None, None))
+    return captured
+
+
+def test_root_path_middleware_prepends_prefix_to_path_and_raw_path():
+    out = _run_root_path_middleware(
+        "/patent/", {"type": "http", "path": "/api/health", "raw_path": b"/api/health"}
+    )
+    assert out["root_path"] == "/patent"
+    assert out["path"] == "/patent/api/health"
+    assert out["raw_path"] == b"/patent/api/health"
+
+
+def test_root_path_middleware_noop_when_empty_or_not_http():
+    scope = {"type": "http", "path": "/api/health", "raw_path": b"/api/health", "root_path": ""}
+    assert _run_root_path_middleware("", scope) == scope
+    lifespan = {"type": "lifespan"}
+    assert _run_root_path_middleware("/patent", lifespan) == lifespan
