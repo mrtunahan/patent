@@ -73,10 +73,12 @@ Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8
 ### Bilinen sınırlamalar
 
 - Kimlik doğrulama yoktur; uygulamaya erişen herkes tüm işlemleri yapabilir (şartname gereği).
-- Router'ların durumu: `departments`, `fsmh_types`, `attorney_firms` ve `applicants` gerçek uçlardır; `patents` (5 uç) ve `settings` (2 uç) hâlâ `501 Henüz uygulanmadı` iskeletidir; `/api/health` çalışır. Patent yazma/liste/mükerrer uyarısı ve settings sonraki adımlardadır. Silme engeli ve pasife alma yönlendirmesi (Madde 6/2) MVP'de ertelendi (bkz. Onaylanan Kararlar). Detaylı UI ve Excel import/export yazılmamıştır.
+- Router'ların durumu: Madde 7'deki 27 uç gerçektir (`patents` liste/yazma, `applicants`, `departments`, `fsmh_types`, `attorney_firms`, `settings`) ve `/api/health` çalışır; iskelet (501) uç kalmadı. Silme engeli ve pasife alma yönlendirmesi (Madde 6/2) MVP'de ertelendi (bkz. Onaylanan Kararlar). Detaylı UI ve Excel import/export yazılmamıştır.
 - 500 (işlenmeyen sunucu hatası) yanıtlarında `frame-ancestors` başlığı eklenmeyebilir (Starlette `ServerErrorMiddleware`).
 - Proxy'nin öneki silmediği bir kurulumda `ROOT_PATH` yollarda çift önek oluşturur: `/patent/api/...` istekleri JSON yerine `index.html` (200), uzantılı dosyalar (`/patent/assets/...`) 404 döner. Bu durum entegrasyon aşamasında ele alınacaktır.
 - `normalize_tr` (karşılaştırma/arama anahtarı, `core/text.py`) sınırları: (1) zaten küçük harfli ayrışık `i`+U+0307 girdisi `i`'ye eşitlenmez (`İ` ve `I`+U+0307 doğru işlenir); bilinçli sınırdır, Excel import (Aşama 13) öncesi yeniden değerlendirilecek. (2) Büyük `I` Türkçe kuralıyla `ı` olur: `Isparta` ≠ `isparta`; İngilizce yazılmış `FIRMA` ile `firma` eşleşmez. (3) `None` desteklenmez (`AttributeError`); çağıran boş/None değeri önceden ele almalıdır. (4) Aksan katlanmaz (`şaban` ≠ `saban`).
+- Patent listesinde `q` araması Türkçe büyük/küçük harf duyarsızdır ama **aksan katlamaz**: `şaban` araması `saban` kaydını, `saban` araması `şaban` kaydını bulmaz; `I`→`ı` kuralı geçerlidir (`IŞIK` ↔ `ışık`). `q` Python tarafında (normalize edilerek) çalışır; liste filtre+sıralama sonrası bellekte sayfalanır (küçük ölçek varsayımı).
+- Liste sıralamasında tarihi/bölümü/vekil firması boş kayıtlar `asc` ve `desc` yönünde de sona atılır; eşitlikte `id` artan.
 - Testlerde Starlette `TestClient`, `httpx2` kurulmasını öneren bir kullanımdan-kaldırma uyarısı verir (zararsız).
 
 ## Onaylanan Kararlar

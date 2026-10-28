@@ -118,8 +118,8 @@ def test_hidden_files_not_served(client):
 
 def test_api_not_shadowed(client):
     assert client.get("/api/health").json() == {"status": "ok"}
-    assert client.get("/api/patents").status_code == 501
-    assert client.get("/api/settings").status_code == 501
+    assert client.get("/api/patents?page=0").status_code == 422  # rota gölgelenmiyor (DB gerekmez)
+    assert client.get("/api/settings/x").status_code == 404
     assert client.get("/openapi.json").status_code == 200
 
 
@@ -139,7 +139,7 @@ def test_non_get_methods_do_not_fall_back(client):
     r = client.post("/api/health")
     assert r.status_code == 405  # gerçek yol için hâlâ 405
     assert client.post("/api/yok").status_code == 404  # bilinmeyen /api yolu: 404 JSON
-    assert client.put("/api/settings", json={"institution_name": "X"}).status_code == 501
+    assert client.put("/api/settings", json={"k": 5}).status_code == 422  # gerçek yol: gövde doğrulaması
 
 
 def test_head_requests(client):
@@ -206,7 +206,7 @@ def test_missing_dist_does_not_crash(tmp_path):
     app = make_app(tmp_path / "yok")
     c = TestClient(app)
     assert c.get("/api/health").json() == {"status": "ok"}
-    assert c.get("/api/patents").status_code == 501
+    assert c.get("/api/patents?page=0").status_code == 422
     for path in ("/", "/applicants", "/assets/x.js"):
         r = c.get(path)
         assert r.status_code == 404
@@ -272,7 +272,7 @@ def test_root_path_with_static_and_api(site):
     assert c.get("/assets/app.js").text == "console.log('app');"
     assert c.get("/assets/yok.js").status_code == 404
     assert c.get("/api/health").json() == {"status": "ok"}
-    assert c.get("/api/patents").status_code == 501
+    assert c.get("/api/patents?page=0").status_code == 422
     assert c.get("/api/yok").json() == {"detail": "Not Found"}
     assert c.get("/").headers["content-security-policy"] == "frame-ancestors 'self'"
 

@@ -21,31 +21,24 @@ LOOKUP_BODIES = {
     "attorney_firms": {"name": "F"},
 }
 
-# Madde 7 tablosu: (metot, yol, gövde)
-SKELETON = [
-    ("GET", "/api/patents", None),  # liste: Adım 6'ya kadar iskelet (501)
-    ("GET", "/api/settings", None),
-    ("PUT", "/api/settings", {"institution_name": "ÇAKÜ"}),
-]
-# Gerçek mantığı yazılmış router'lar artık 501 vermez; kendi test dosyalarında sınanır.
-IMPLEMENTED = {"departments", "fsmh_types", "attorney_firms", "applicants"}
-ALL_ROUTES = list(SKELETON) + [  # patent yazma uçları gerçek (test_patents.py)
+# Madde 7 tablosu: (metot, yol, gövde). Hiç 501 iskelet uç kalmadı; davranışlar kendi test dosyalarında.
+ALL_ROUTES = [
+    ("GET", "/api/patents", None),
     ("POST", "/api/patents", PATENT_BODY),
     ("GET", "/api/patents/1", None),
     ("PUT", "/api/patents/1", PATENT_BODY),
     ("DELETE", "/api/patents/1", None),
+    ("GET", "/api/settings", None),
+    ("PUT", "/api/settings", {"institution_name": "ÇAKÜ"}),
 ]
 for _name, _body in LOOKUP_BODIES.items():
-    _routes = [
+    ALL_ROUTES += [
         ("GET", f"/api/{_name}", None),
         ("POST", f"/api/{_name}", _body),
         ("GET", f"/api/{_name}/1", None),
         ("PUT", f"/api/{_name}/1", _body),
         ("DELETE", f"/api/{_name}/1", None),
     ]
-    ALL_ROUTES += _routes
-    if _name not in IMPLEMENTED:
-        SKELETON += _routes
 
 
 @pytest.fixture(autouse=True)
@@ -85,18 +78,12 @@ def test_importing_main_does_not_create_db_file():
     assert not database.DB_PATH.exists()
 
 
-# --- iskelet: 501 ---
+# --- Madde 7 tablosu ---
 
-@pytest.mark.parametrize("method,path,body", SKELETON, ids=[f"{m} {p}" for m, p, _ in SKELETON])
-def test_skeleton_endpoints_return_501(client, method, path, body):
-    r = client.request(method, path, json=body)
-    assert r.status_code == 501, r.text
-    assert r.json() == {"detail": "Henüz uygulanmadı"}
-
-
-def test_every_skeleton_route_is_in_openapi(client):
+def test_every_madde7_route_is_in_openapi(client):
     paths = client.get("/openapi.json").json()["paths"]
-    for method, path, _ in ALL_ROUTES:  # iskelet + gerçek uçlar: Madde 7 tablosu eksiksiz
+    assert len(ALL_ROUTES) == 27
+    for method, path, _ in ALL_ROUTES:
         template = path
         for name in ("patents", "applicants", "departments", "fsmh_types", "attorney_firms"):
             if path.startswith(f"/api/{name}/1"):
@@ -128,13 +115,16 @@ def test_invalid_list_query_is_422(client, query):
     assert client.get(f"/api/patents?{query}").status_code == 422
 
 
-def test_valid_list_query_reaches_501(client):
-    r = client.get(
+def test_valid_list_query_is_200_with_envelope(engine):
+    from conftest import build_client
+
+    r = build_client(engine).get(
         "/api/patents?q=tuz&applicant_id=1&department_id=2&fsmh_type_id=1&attorney_firm_id=3"
         "&date_from=2026-01-01&date_to=2026-12-31&has_attorney=true&sort_by=title&sort_dir=desc"
         "&page=2&page_size=50"
     )
-    assert r.status_code == 501
+    assert r.status_code == 200
+    assert r.json() == {"items": [], "total": 0, "page": 2, "page_size": 50}
 
 
 def test_invalid_body_is_422(client):
@@ -157,7 +147,7 @@ RESPONSES = [
     ("GET", "/api/health", None, 200),
     ("GET", "/api/yok", None, 404),
     ("GET", "/api/patents?page=0", None, 422),
-    ("GET", "/api/patents", None, 501),
+    ("DELETE", "/api/patents/abc", None, 422),
 ]
 
 
@@ -250,7 +240,7 @@ def test_root_path_health_and_openapi():
     spec = c.get("/openapi.json").json()
     assert spec["servers"] == [{"url": "/patent"}]
     assert "/api/health" in spec["paths"]  # yollar prefix'siz kalır; servers[0].url prefix'i verir
-    assert c.get("/api/patents").status_code == 501
+    assert c.get("/api/patents?page=0").status_code == 422  # rota ulaşılabilir (DB gerekmez)
 
 
 def test_root_path_trailing_slash_normalized():

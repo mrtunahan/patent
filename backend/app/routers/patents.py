@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 
 from app.core.deps import DbSession, ItemId
-from app.core.errors import not_implemented
 from app.schemas import (
     DuplicateWarning,
     ErrorResponse,
@@ -20,8 +19,8 @@ _duplicate = {409: {"model": DuplicateWarning}}
 
 
 @router.get("", response_model=PatentListResponse)
-def list_patents(query: Annotated[PatentListQuery, Query()]):
-    not_implemented()  # Adım 6
+def list_patents(query: Annotated[PatentListQuery, Query()], db: DbSession):
+    return service.list_patents(db, query)
 
 
 @router.post("", response_model=PatentRead, status_code=201, responses=_duplicate)

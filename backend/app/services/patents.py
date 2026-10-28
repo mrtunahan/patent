@@ -1,11 +1,11 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.errors import DuplicateWarningError, NotFoundError, UnprocessableError
-from app.core.text import normalize_tr
+from app.core.text import normalize_tr, turkish_sort_key
 from app.core.utils import utc_now
 from app.models import Applicant, AttorneyFirm, Department, FsmhType, Patent, PatentPartner
-from app.schemas import PatentIn
+from app.schemas import PatentIn, PatentListQuery, PatentListResponse, PatentRead
 from app.services.common import commit_or_conflict
 
 SAVE_ERROR_MESSAGE = "Kayıt kaydedilemedi: ilişkili kayıt değişmiş olabilir."
@@ -103,3 +103,79 @@ def delete_patent(db: Session, patent_id: int) -> None:
     patent = get_patent(db, patent_id)
     patent.deleted_at = utc_now()
     commit_or_conflict(db, SAVE_ERROR_MESSAGE)
+
+
+def _matches_q(patent: Patent, target: str) -> bool:
+    """q: başlık, başvuru sahibi adı, ortak adları, notlar içinde normalize alt dize eşleşmesi."""
+    fields = [patent.title, patent.applicant.full_name, patent.notes or "", *(p.partner_name for p in patent.partners)]
+    return any(target in normalize_tr(field) for field in fields)
+
+
+def _sort_value(patent: Patent, sort_by: str):
+    """Sıralama değeri; None dönerse kayıt (yön ne olursa olsun) sona atılır."""
+    match sort_by:
+        case "id":
+            return patent.id
+        case "created_at":
+            return patent.created_at
+        case "title":
+            return turkish_sort_key(patent.title)
+        case "applicant":
+            return turkish_sort_key(patent.applicant.full_name)
+        case "fsmh_type":
+            return turkish_sort_key(patent.fsmh_type.name)
+        case "department":
+            return turkish_sort_key(patent.department.name) if patent.department else None
+        case "attorney_firm":
+            return turkish_sort_key(patent.attorney_firm.name) if patent.attorney_firm else None
+        case "application_date":
+            return patent.application_date
+
+
+def list_patents(db: Session, query: PatentListQuery) -> PatentListResponse:
+    stmt = (
+        select(Patent)
+        .where(Patent.deleted_at.is_(None))
+        .options(
+            joinedload(Patent.applicant),
+            joinedload(Patent.department),
+            joinedload(Patent.fsmh_type),
+            joinedload(Patent.attorney_firm),
+            selectinload(Patent.partners),  # N+1 yok
+        )
+        .order_by(Patent.id)
+    )
+    for column, value in (
+        (Patent.applicant_id, query.applicant_id),
+        (Patent.department_id, query.department_id),
+        (Patent.fsmh_type_id, query.fsmh_type_id),
+        (Patent.attorney_firm_id, query.attorney_firm_id),
+    ):
+        if value is not None:
+            stmt = stmt.where(column == value)
+    if query.has_attorney is not None:
+        stmt = stmt.where(Patent.attorney_firm_id.is_not(None) if query.has_attorney else Patent.attorney_firm_id.is_(None))
+    if query.date_from is not None:  # tarihi boş kayıtlar karşılaştırmada elenir
+        stmt = stmt.where(Patent.application_date >= query.date_from)
+    if query.date_to is not None:
+        stmt = stmt.where(Patent.application_date <= query.date_to)
+
+    patents = list(db.scalars(stmt).unique())  # id artan
+    if query.q is not None:
+        target = normalize_tr(query.q)
+        patents = [p for p in patents if _matches_q(p, target)]
+
+    # Eşitlikte id artan: liste id sıralı, Python sort kararlı (reverse=True da eşitlerin sırasını korur).
+    keyed = [(p, _sort_value(p, query.sort_by)) for p in patents]
+    present = sorted((x for x in keyed if x[1] is not None), key=lambda x: x[1], reverse=query.sort_dir == "desc")
+    missing = [x for x in keyed if x[1] is None]  # None her zaman sona (asc ve desc)
+    ordered = [p for p, _ in present + missing]
+
+    start = (query.page - 1) * query.page_size
+    page_items = ordered[start : start + query.page_size]
+    return PatentListResponse(
+        items=[PatentRead.model_validate(p) for p in page_items],
+        total=len(ordered),
+        page=query.page,
+        page_size=query.page_size,
+    )
