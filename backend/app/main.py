@@ -1,14 +1,19 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import Settings, settings
+from app.config import PROJECT_ROOT, Settings, settings
 from app.core.root_path import RootPathMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
+from app.core.spa import mount_spa
 from app.routers import applicants, attorney_firms, departments, fsmh_types, patents
 from app.routers import settings as settings_router
 
+DIST_DIR = PROJECT_ROOT / "frontend" / "dist"
 
-def create_app(settings_obj: Settings | None = None) -> FastAPI:
+
+def create_app(settings_obj: Settings | None = None, dist_dir: Path | None = None) -> FastAPI:
     cfg = settings_obj or settings
     app = FastAPI(title="Patent Takip")
 
@@ -18,6 +23,9 @@ def create_app(settings_obj: Settings | None = None) -> FastAPI:
 
     for module in (patents, applicants, departments, fsmh_types, attorney_firms, settings_router):
         app.include_router(module.router, prefix="/api")
+
+    # Statik servis ve SPA fallback router'lardan sonra kaydedilir (/api gölgelenmesin).
+    mount_spa(app, dist_dir or DIST_DIR)
 
     # Varsayılan kapalı/aynı origin (Madde 11): yalnızca CORS_ORIGINS doluysa eklenir.
     if cfg.CORS_ORIGINS:

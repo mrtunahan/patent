@@ -37,3 +37,10 @@ Bağlayıcı teknik şartname: [docs/patent-takip-otomasyon-plan.md](docs/patent
 - Vite dev server host `127.0.0.1` (Node 26 `localhost`'u yalnızca IPv6'da dinliyor) ve `strictPort: true`.
 - `PagePlaceholder` ve `NotFound` Madde 8 ağacında yoktur; `components/` ve `pages/` içeriği serbest olduğu için eklendi.
 - `@types/react` ve `@types/react-dom` JSX derlemesi için eklendi.
+- Production tek port: `frontend/dist`, FastAPI tarafından aynı porttan servis edilir (`core/spa.py`). `/assets` StaticFiles ile (`Cache-Control: public, max-age=31536000, immutable`), diğer bilinmeyen GET/HEAD yolları `index.html`'e düşer (`no-cache`). `/api` ve altı asla `index.html` dönmez; uzantılı veya gizli (`.`ile başlayan) yol yoksa 404.
+- `dist` (ve `index.html`) yoksa uygulama çökmez: `/api` çalışır, kök yol "Frontend derlenmemiş" 404 JSON döner. `dist` varlığı uygulama başlarken denetlenir; frontend build edildikten sonra backend yeniden başlatılmalıdır.
+- `ROOT_PATH` ve `VITE_BASE_PATH`, proxy'nin dışarıya sunduğu alt yolla tutarlı olmalıdır (örn. ikisi de `/patent`). Backend `index.html` içindeki asset yollarını yeniden yazmaz; bunlar build zamanındaki `VITE_BASE_PATH`'e bağlıdır. `VITE_BASE_PATH` değişirse frontend yeniden build edilmelidir.
+- `RootPathMiddleware`, proxy prefix'i sildiği için `scope["path"]`/`raw_path`'e `ROOT_PATH` önekini geri ekler (ASGI'de `path` `root_path`'i içerir); Starlette yönlendirmede öneki çıkarır, uygulama yolları prefix'siz kalır. Aksi halde `Mount`/StaticFiles yanlış yol çözer.
+- `.` ile başlayan yol segmentleri statik servisten 404 döner (güvenlik).
+- `/api` altında GET-only yollara HEAD/POST → 405 döner; bilinmeyen `/api` yolları 404 JSON'dur.
+- `RootPathMiddleware`, proxy'nin ÖNEKİ SİLDİĞİ varsayımıyla scope path'ine öneki geri ekler; proxy öneki silmiyorsa yollar çift önek olur ve 404 verir, bu durumda entegrasyon aşamasında ayrıca ele alınır.
