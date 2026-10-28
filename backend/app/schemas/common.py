@@ -6,6 +6,7 @@ from pydantic import (
     BaseModel,
     BeforeValidator,
     ConfigDict,
+    Field,
     StringConstraints,
 )
 
@@ -29,6 +30,9 @@ def strip_or_none(value):
         return value or None
     return value
 
+
+# İlişkili kayıt id'si (FK): SQLite 64-bit tamsayı sınırını aşan değer 500 yerine 422 olur.
+ForeignId = Annotated[int, Field(le=2**63 - 1)]
 
 # Zorunlu metin: kırpılır (iç boşluklara dokunulmaz), boşsa 422.
 RequiredStr100 = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]

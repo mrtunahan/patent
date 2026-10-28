@@ -119,7 +119,7 @@ def test_hidden_files_not_served(client):
 def test_api_not_shadowed(client):
     assert client.get("/api/health").json() == {"status": "ok"}
     assert client.get("/api/patents").status_code == 501
-    assert client.get("/api/applicants/1").status_code == 501
+    assert client.get("/api/settings").status_code == 501
     assert client.get("/openapi.json").status_code == 200
 
 

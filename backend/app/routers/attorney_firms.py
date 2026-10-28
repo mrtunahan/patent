@@ -1,31 +1,32 @@
 from fastapi import APIRouter
 
-from app.core.errors import not_implemented
-from app.schemas import AttorneyFirmIn, AttorneyFirmRead, ErrorResponse
+from app.core.deps import DbSession, ItemId
+from app.schemas import ErrorResponse, AttorneyFirmIn, AttorneyFirmRead
+from app.services import attorney_firms as service
 
 router = APIRouter(prefix="/attorney_firms", tags=["attorney_firms"])
 
 
 @router.get("", response_model=list[AttorneyFirmRead])
-def list_attorney_firms():
-    not_implemented()
+def list_attorney_firms(db: DbSession):
+    return service.list_attorney_firms(db)
 
 
 @router.post("", response_model=AttorneyFirmRead, status_code=201, responses={409: {"model": ErrorResponse}})
-def create_attorney_firm(payload: AttorneyFirmIn):
-    not_implemented()
+def create_attorney_firm(payload: AttorneyFirmIn, db: DbSession):
+    return service.create_attorney_firm(db, payload)
 
 
 @router.get("/{item_id}", response_model=AttorneyFirmRead, responses={404: {"model": ErrorResponse}})
-def get_attorney_firm(item_id: int):
-    not_implemented()
+def get_attorney_firm(item_id: ItemId, db: DbSession):
+    return service.get_attorney_firm(db, item_id)
 
 
 @router.put("/{item_id}", response_model=AttorneyFirmRead, responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}})
-def update_attorney_firm(item_id: int, payload: AttorneyFirmIn):
-    not_implemented()
+def update_attorney_firm(item_id: ItemId, payload: AttorneyFirmIn, db: DbSession):
+    return service.update_attorney_firm(db, item_id, payload)
 
 
 @router.delete("/{item_id}", status_code=204, responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}})
-def delete_attorney_firm(item_id: int):
-    not_implemented()
+def delete_attorney_firm(item_id: ItemId, db: DbSession):
+    service.delete_attorney_firm(db, item_id)

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.core.deps import DbSession
+from app.core.deps import DbSession, ItemId
 from app.schemas import ErrorResponse, FsmhTypeIn, FsmhTypeRead
 from app.services import fsmh_types as service
 
@@ -18,15 +18,15 @@ def create_fsmh_type(payload: FsmhTypeIn, db: DbSession):
 
 
 @router.get("/{item_id}", response_model=FsmhTypeRead, responses={404: {"model": ErrorResponse}})
-def get_fsmh_type(item_id: int, db: DbSession):
+def get_fsmh_type(item_id: ItemId, db: DbSession):
     return service.get_fsmh_type(db, item_id)
 
 
 @router.put("/{item_id}", response_model=FsmhTypeRead, responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}})
-def update_fsmh_type(item_id: int, payload: FsmhTypeIn, db: DbSession):
+def update_fsmh_type(item_id: ItemId, payload: FsmhTypeIn, db: DbSession):
     return service.update_fsmh_type(db, item_id, payload)
 
 
 @router.delete("/{item_id}", status_code=204, responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}})
-def delete_fsmh_type(item_id: int, db: DbSession):
+def delete_fsmh_type(item_id: ItemId, db: DbSession):
     service.delete_fsmh_type(db, item_id)

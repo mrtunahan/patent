@@ -1,9 +1,9 @@
-from app.schemas.common import InSchema, OptionalStr200, ReadSchema, RequiredStr200, UtcDatetime
+from app.schemas.common import ForeignId, InSchema, OptionalStr200, ReadSchema, RequiredStr200, UtcDatetime
 
 
 class ApplicantIn(InSchema):
     full_name: RequiredStr200
-    department_id: int | None = None
+    department_id: ForeignId | None = None
     email: OptionalStr200 = None
     is_active: bool = True
 

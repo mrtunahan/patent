@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.core.deps import DbSession
+from app.core.deps import DbSession, ItemId
 from app.schemas import DepartmentIn, DepartmentRead, ErrorResponse
 from app.services import departments as service
 
@@ -18,15 +18,15 @@ def create_department(payload: DepartmentIn, db: DbSession):
 
 
 @router.get("/{item_id}", response_model=DepartmentRead, responses={404: {"model": ErrorResponse}})
-def get_department(item_id: int, db: DbSession):
+def get_department(item_id: ItemId, db: DbSession):
     return service.get_department(db, item_id)
 
 
 @router.put("/{item_id}", response_model=DepartmentRead, responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}})
-def update_department(item_id: int, payload: DepartmentIn, db: DbSession):
+def update_department(item_id: ItemId, payload: DepartmentIn, db: DbSession):
     return service.update_department(db, item_id, payload)
 
 
 @router.delete("/{item_id}", status_code=204, responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}})
-def delete_department(item_id: int, db: DbSession):
+def delete_department(item_id: ItemId, db: DbSession):
     service.delete_department(db, item_id)
