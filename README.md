@@ -3,6 +3,78 @@
 Bağlayıcı teknik şartname: [docs/patent-takip-otomasyon-plan.md](docs/patent-takip-otomasyon-plan.md) (v1.4).
 Şartname bu dosyada değiştirilmez; aşağıdaki kararlar onaylanmış uygulama detaylarıdır.
 
+## Çalıştırma
+
+Gereksinimler: Python 3.11+ (burada `python3.12`), Node.js ve npm. Tüm komutlar proje kökünden verilmiştir.
+
+### İlk kurulum
+
+```bash
+python3.12 -m venv backend/.venv
+source backend/.venv/bin/activate
+pip install -r backend/requirements.txt
+(cd frontend && npm install)
+cp .env.example .env          # .env git'e girmez; değerleri ihtiyaca göre düzenleyin
+```
+
+### Veritabanı
+
+```bash
+(cd backend && alembic upgrade head)     # data/patent.db oluşur (WAL); hangi dizinden çalıştırılırsa çalıştırılsın aynı dosya
+```
+
+Şema değişiklikleri yalnızca Alembic migration ile yapılır (`create_all` kullanılmaz). `alembic.ini` içinde DB yolu yoktur.
+
+### Geliştirme modu (iki terminal)
+
+```bash
+# Terminal 1 - backend (http://127.0.0.1:8001)
+cd backend && uvicorn app.main:app --host 127.0.0.1 --port 8001
+
+# Terminal 2 - frontend (http://127.0.0.1:5173, /api -> 8001 proxy)
+cd frontend && npm run dev
+```
+
+Arayüze http://127.0.0.1:5173/ adresinden girilir. Backend sağlık kontrolü: http://127.0.0.1:8001/api/health.
+
+### Production modu (tek port)
+
+```bash
+(cd frontend && npm run build)           # frontend/dist üretir
+cd backend && uvicorn app.main:app --host 127.0.0.1 --port 8001
+```
+
+Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8001/api/health. `frontend/dist` backend başlarken denetlenir; build sonradan alındıysa backend yeniden başlatılmalıdır.
+
+### Testler
+
+```bash
+(cd backend && pytest)                   # backend: birim ve duman testleri
+(cd frontend && npm run build)           # frontend: tip denetimi (tsc) + derleme
+```
+
+### .env değişkenleri
+
+| Değişken | Varsayılan | Açıklama |
+|---|---|---|
+| `HOST` | `127.0.0.1` | Backend dinleme adresi (bkz. Bilinen sınırlamalar) |
+| `PORT` | `8001` | Backend portu (bkz. Bilinen sınırlamalar) |
+| `CORS_ORIGINS` | dev: `http://localhost:5173,http://127.0.0.1:5173` | Virgülle ayrılmış izinli origin listesi. Kod varsayılanı boş (kapalı/aynı origin); production'da boş bırakın |
+| `FRAME_ANCESTORS` | `"'self'"` | `Content-Security-Policy: frame-ancestors` kaynakları (boşlukla ayrılmış). `;` ve satır sonu reddedilir. `X-Frame-Options` hiç gönderilmez |
+| `ROOT_PATH` | boş | Reverse proxy alt yolu, örn. `/patent` (proxy öneki siler varsayımı) |
+| `VITE_BASE_PATH` | boş | Frontend alt yolu, örn. `/patent/`; Vite tarafından okunur |
+
+> **Uyarı:** `VITE_BASE_PATH` build zamanında `index.html` ve asset yollarına gömülür. Değeri değiştirirseniz `npm run build` yeniden alınmalıdır. `VITE_BASE_PATH` ve `ROOT_PATH`, proxy'nin dışarıya sunduğu alt yolla tutarlı olmalıdır.
+
+### Bilinen sınırlamalar
+
+- Kimlik doğrulama yoktur; uygulamaya erişen herkes tüm işlemleri yapabilir (şartname gereği).
+- Router'lar henüz iskelettir: Madde 7'deki 27 uç `501 Henüz uygulanmadı` döner; `/api/health` çalışır. Servis katmanı (normalize_tr, mükerrer kontrolü, silme engeli, liste sorgusu), CRUD mantığı ve detaylı UI sonraki aşamalardadır. Excel import/export yazılmamıştır.
+- `HOST` ve `PORT` değişkenleri `config.py` içinde tanımlıdır ancak uvicorn komut satırını yönlendirmez; host/port şimdilik `--host/--port` ile verilir.
+- 500 (işlenmeyen sunucu hatası) yanıtlarında `frame-ancestors` başlığı eklenmeyebilir (Starlette `ServerErrorMiddleware`).
+- Proxy'nin öneki silmediği bir kurulumda `ROOT_PATH` yollarda çift önek oluşturur: `/patent/api/...` istekleri JSON yerine `index.html` (200), uzantılı dosyalar (`/patent/assets/...`) 404 döner. Bu durum entegrasyon aşamasında ele alınacaktır.
+- Testlerde Starlette `TestClient`, `httpx2` kurulmasını öneren bir kullanımdan-kaldırma uyarısı verir (zararsız).
+
 ## Onaylanan Kararlar
 
 - Şartname `docs/` altına kopyalanır; proje içeriği doğrudan `PATENT/` köküne kurulur.
@@ -43,4 +115,4 @@ Bağlayıcı teknik şartname: [docs/patent-takip-otomasyon-plan.md](docs/patent
 - `RootPathMiddleware`, proxy prefix'i sildiği için `scope["path"]`/`raw_path`'e `ROOT_PATH` önekini geri ekler (ASGI'de `path` `root_path`'i içerir); Starlette yönlendirmede öneki çıkarır, uygulama yolları prefix'siz kalır. Aksi halde `Mount`/StaticFiles yanlış yol çözer.
 - `.` ile başlayan yol segmentleri statik servisten 404 döner (güvenlik).
 - `/api` altında GET-only yollara HEAD/POST → 405 döner; bilinmeyen `/api` yolları 404 JSON'dur.
-- `RootPathMiddleware`, proxy'nin ÖNEKİ SİLDİĞİ varsayımıyla scope path'ine öneki geri ekler; proxy öneki silmiyorsa yollar çift önek olur ve 404 verir, bu durumda entegrasyon aşamasında ayrıca ele alınır.
+- `RootPathMiddleware`, proxy'nin ÖNEKİ SİLDİĞİ varsayımıyla scope path'ine öneki geri ekler; proxy öneki silmiyorsa yollar çift önek olur (`/patent/api/...` JSON yerine `index.html` 200, uzantılı dosyalar 404 döner), bu durumda entegrasyon aşamasında ayrıca ele alınır.
