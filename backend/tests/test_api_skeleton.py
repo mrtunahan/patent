@@ -32,7 +32,7 @@ SKELETON = [
     ("PUT", "/api/settings", {"institution_name": "ÇAKÜ"}),
 ]
 # Gerçek mantığı yazılmış router'lar artık 501 vermez; kendi test dosyalarında sınanır.
-IMPLEMENTED = {"departments"}
+IMPLEMENTED = {"departments", "fsmh_types"}
 ALL_ROUTES = list(SKELETON)
 for _name, _body in LOOKUP_BODIES.items():
     _routes = [
