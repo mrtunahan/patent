@@ -19,3 +19,5 @@ Bağlayıcı teknik şartname: [docs/patent-takip-otomasyon-plan.md](docs/patent
 - `FRAME_ANCESTORS` doğrulanır (`;` ve satır sonu reddedilir). `CORS_ORIGINS` varsayılanı dev değerleridir; production'da boşaltılır.
 - FSMH türü seed'i ilk migration'da yapılır; `settings` seed edilmez.
 - Her aşamanın testi o aşamada yazılır.
+- `backend/pytest.ini` şartname ağacında yoktur; çıplak `pytest` komutunun `app` paketini bulabilmesi için eklenmiş araç yapılandırmasıdır.
+- `SessionLocal` varsayılan `autoflush=True` ile, `expire_on_commit=False` olarak kurulur (commit sonrası nesneler API yanıtında okunabilsin).
