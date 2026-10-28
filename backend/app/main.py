@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import Settings, settings
+from app.core.root_path import RootPathMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
 from app.routers import applicants, attorney_firms, departments, fsmh_types, patents
 from app.routers import settings as settings_router
@@ -9,7 +10,7 @@ from app.routers import settings as settings_router
 
 def create_app(settings_obj: Settings | None = None) -> FastAPI:
     cfg = settings_obj or settings
-    app = FastAPI(title="Patent Takip", root_path=cfg.ROOT_PATH)
+    app = FastAPI(title="Patent Takip")
 
     @app.get("/api/health", tags=["health"])
     def health():
@@ -28,6 +29,8 @@ def create_app(settings_obj: Settings | None = None) -> FastAPI:
         )
     # En son eklenen en dışta çalışır: CORS ön kontrol yanıtları dahil her yanıta başlık eklenir.
     app.add_middleware(SecurityHeadersMiddleware, frame_ancestors=cfg.FRAME_ANCESTORS)
+    # En dışta: iç katmanlar (OpenAPI dahil) doğru root_path'i görsün.
+    app.add_middleware(RootPathMiddleware, root_path=cfg.ROOT_PATH)
     return app
 
 

@@ -30,3 +30,7 @@ Bağlayıcı teknik şartname: [docs/patent-takip-otomasyon-plan.md](docs/patent
 - Kırpma sonrası çakışan Settings anahtarları 422 döner.
 - `PatentListQuery` bilinmeyen query parametresini 422 ile reddeder.
 - Patent ortaklarının sırası servis katmanında id'ye göre verilecektir.
+- 500 yanıtlarında CSP başlığı Starlette `ServerErrorMiddleware` yüzünden eklenmeyebilir (bilinen sınırlama); entegrasyon aşamasında iframe testinde yeniden bakılacak.
+- API yolları alt çizgilidir: `/api/fsmh_types`, `/api/attorney_firms`.
+- `POST` başarı kodu 201, `DELETE` başarı kodu 204.
+- `ROOT_PATH`, `FastAPI(root_path=...)` (deprecated) yerine `core/root_path.py` ASGI middleware ile uygulanır; en dışta çalışır, boşsa scope değiştirilmez.

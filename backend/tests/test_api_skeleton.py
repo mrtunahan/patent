@@ -246,6 +246,17 @@ def test_root_path_health_and_openapi():
     assert c.get("/api/patents").status_code == 501
 
 
+def test_root_path_trailing_slash_normalized():
+    c = make_client(ROOT_PATH="/patent/")
+    assert c.get("/openapi.json").json()["servers"] == [{"url": "/patent"}]
+
+
+def test_root_path_applies_to_error_responses_too():
+    c = make_client(ROOT_PATH="/patent")
+    assert c.get("/api/yok").status_code == 404
+    assert c.get("/api/patents?page=0").status_code == 422
+
+
 def test_root_path_default_empty_has_no_servers_prefix(client):
     spec = client.get("/openapi.json").json()
     assert spec.get("servers") in (None, [])
