@@ -28,8 +28,9 @@ cp .env.example .env          # .env git'e girmez; değerleri ihtiyaca göre dü
 ### Geliştirme modu (iki terminal)
 
 ```bash
-# Terminal 1 - backend (http://127.0.0.1:8001)
-cd backend && uvicorn app.main:app --host 127.0.0.1 --port 8001
+# Terminal 1 - backend (HOST/PORT .env'den okunur; varsayılan http://127.0.0.1:8001)
+cd backend && python -m app.main
+# alternatif: cd backend && uvicorn app.main:app --host 127.0.0.1 --port 8001
 
 # Terminal 2 - frontend (http://127.0.0.1:5173, /api -> 8001 proxy)
 cd frontend && npm run dev
@@ -41,8 +42,11 @@ Arayüze http://127.0.0.1:5173/ adresinden girilir. Backend sağlık kontrolü: 
 
 ```bash
 (cd frontend && npm run build)           # frontend/dist üretir
-cd backend && uvicorn app.main:app --host 127.0.0.1 --port 8001
+cd backend && python -m app.main         # HOST/PORT .env'den okunur
+# alternatif: cd backend && uvicorn app.main:app --host 127.0.0.1 --port 8001
 ```
+
+`python -m app.main`, `uvicorn.run` çağrısını `.env`/ortam değişkenlerindeki `HOST` ve `PORT` ile yapar (örn. `PORT=8011 python -m app.main`). `uvicorn` komutunu doğrudan kullanırsanız host/port `--host/--port` ile verilir. Komut `backend/` dizininden çalıştırılmalıdır.
 
 Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8001/api/health. `frontend/dist` backend başlarken denetlenir; build sonradan alındıysa backend yeniden başlatılmalıdır.
 
@@ -57,8 +61,8 @@ Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8
 
 | Değişken | Varsayılan | Açıklama |
 |---|---|---|
-| `HOST` | `127.0.0.1` | Backend dinleme adresi (bkz. Bilinen sınırlamalar) |
-| `PORT` | `8001` | Backend portu (bkz. Bilinen sınırlamalar) |
+| `HOST` | `127.0.0.1` | Backend dinleme adresi (`python -m app.main`) |
+| `PORT` | `8001` | Backend portu (`python -m app.main`) |
 | `CORS_ORIGINS` | dev: `http://localhost:5173,http://127.0.0.1:5173` | Virgülle ayrılmış izinli origin listesi. Kod varsayılanı boş (kapalı/aynı origin); production'da boş bırakın |
 | `FRAME_ANCESTORS` | `"'self'"` | `Content-Security-Policy: frame-ancestors` kaynakları (boşlukla ayrılmış). `;` ve satır sonu reddedilir. `X-Frame-Options` hiç gönderilmez |
 | `ROOT_PATH` | boş | Reverse proxy alt yolu, örn. `/patent` (proxy öneki siler varsayımı) |
@@ -70,7 +74,6 @@ Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8
 
 - Kimlik doğrulama yoktur; uygulamaya erişen herkes tüm işlemleri yapabilir (şartname gereği).
 - Router'lar henüz iskelettir: Madde 7'deki 27 uç `501 Henüz uygulanmadı` döner; `/api/health` çalışır. Servis katmanı (normalize_tr, mükerrer kontrolü, silme engeli, liste sorgusu), CRUD mantığı ve detaylı UI sonraki aşamalardadır. Excel import/export yazılmamıştır.
-- `HOST` ve `PORT` değişkenleri `config.py` içinde tanımlıdır ancak uvicorn komut satırını yönlendirmez; host/port şimdilik `--host/--port` ile verilir.
 - 500 (işlenmeyen sunucu hatası) yanıtlarında `frame-ancestors` başlığı eklenmeyebilir (Starlette `ServerErrorMiddleware`).
 - Proxy'nin öneki silmediği bir kurulumda `ROOT_PATH` yollarda çift önek oluşturur: `/patent/api/...` istekleri JSON yerine `index.html` (200), uzantılı dosyalar (`/patent/assets/...`) 404 döner. Bu durum entegrasyon aşamasında ele alınacaktır.
 - Testlerde Starlette `TestClient`, `httpx2` kurulmasını öneren bir kullanımdan-kaldırma uyarısı verir (zararsız).
@@ -113,6 +116,7 @@ Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8
 - `dist` (ve `index.html`) yoksa uygulama çökmez: `/api` çalışır, kök yol "Frontend derlenmemiş" 404 JSON döner. `dist` varlığı uygulama başlarken denetlenir; frontend build edildikten sonra backend yeniden başlatılmalıdır.
 - `ROOT_PATH` ve `VITE_BASE_PATH`, proxy'nin dışarıya sunduğu alt yolla tutarlı olmalıdır (örn. ikisi de `/patent`). Backend `index.html` içindeki asset yollarını yeniden yazmaz; bunlar build zamanındaki `VITE_BASE_PATH`'e bağlıdır. `VITE_BASE_PATH` değişirse frontend yeniden build edilmelidir.
 - `RootPathMiddleware`, proxy prefix'i sildiği için `scope["path"]`/`raw_path`'e `ROOT_PATH` önekini geri ekler (ASGI'de `path` `root_path`'i içerir); Starlette yönlendirmede öneki çıkarır, uygulama yolları prefix'siz kalır. Aksi halde `Mount`/StaticFiles yanlış yol çözer.
+- `python -m app.main` (`if __name__ == "__main__"` bloğu) `uvicorn.run`'ı `settings.HOST`/`settings.PORT` ile çağırır (Madde 11); import anında sunucu başlamaz.
 - `.` ile başlayan yol segmentleri statik servisten 404 döner (güvenlik).
 - `/api` altında GET-only yollara HEAD/POST → 405 döner; bilinmeyen `/api` yolları 404 JSON'dur.
 - `RootPathMiddleware`, proxy'nin ÖNEKİ SİLDİĞİ varsayımıyla scope path'ine öneki geri ekler; proxy öneki silmiyorsa yollar çift önek olur (`/patent/api/...` JSON yerine `index.html` 200, uzantılı dosyalar 404 döner), bu durumda entegrasyon aşamasında ayrıca ele alınır.

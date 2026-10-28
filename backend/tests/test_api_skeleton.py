@@ -292,3 +292,38 @@ def test_root_path_middleware_noop_when_empty_or_not_http():
     assert _run_root_path_middleware("", scope) == scope
     lifespan = {"type": "lifespan"}
     assert _run_root_path_middleware("/patent", lifespan) == lifespan
+
+
+# --- HOST/PORT: python -m app.main (Madde 11) ---
+
+def _run_main_module(monkeypatch, run_name, cfg):
+    import runpy
+    import sys
+
+    import uvicorn
+
+    import app.config
+
+    # `python -m` gerçekte modülü sys.modules'ta bulmadan çalıştırır; testte aynısını sağla.
+    monkeypatch.delitem(sys.modules, "app.main", raising=False)
+    calls = []
+    monkeypatch.setattr(uvicorn, "run", lambda *args, **kwargs: calls.append((args, kwargs)))
+    monkeypatch.setattr(app.config, "settings", cfg)
+    runpy.run_module("app.main", run_name=run_name)
+    return calls
+
+
+def test_main_block_runs_uvicorn_with_settings_host_and_port(monkeypatch):
+    cfg = Settings(_env_file=None, HOST="127.0.0.2", PORT=8123)
+    calls = _run_main_module(monkeypatch, "__main__", cfg)
+    assert calls == [(("app.main:app",), {"host": "127.0.0.2", "port": 8123})]
+
+
+def test_main_block_defaults_are_127_0_0_1_8001(monkeypatch):
+    calls = _run_main_module(monkeypatch, "__main__", Settings(_env_file=None))
+    assert calls == [(("app.main:app",), {"host": "127.0.0.1", "port": 8001})]
+
+
+def test_importing_main_does_not_start_server(monkeypatch):
+    calls = _run_main_module(monkeypatch, "app.main_imported", Settings(_env_file=None))
+    assert calls == []

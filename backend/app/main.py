@@ -43,3 +43,9 @@ def create_app(settings_obj: Settings | None = None, dist_dir: Path | None = Non
 
 
 app = create_app()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app.main:app", host=settings.HOST, port=settings.PORT)
