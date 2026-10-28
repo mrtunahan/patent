@@ -34,3 +34,6 @@ Bağlayıcı teknik şartname: [docs/patent-takip-otomasyon-plan.md](docs/patent
 - API yolları alt çizgilidir: `/api/fsmh_types`, `/api/attorney_firms`.
 - `POST` başarı kodu 201, `DELETE` başarı kodu 204.
 - `ROOT_PATH`, `FastAPI(root_path=...)` (deprecated) yerine `core/root_path.py` ASGI middleware ile uygulanır; en dışta çalışır, boşsa scope değiştirilmez.
+- Vite dev server host `127.0.0.1` (Node 26 `localhost`'u yalnızca IPv6'da dinliyor) ve `strictPort: true`.
+- `PagePlaceholder` ve `NotFound` Madde 8 ağacında yoktur; `components/` ve `pages/` içeriği serbest olduğu için eklendi.
+- `@types/react` ve `@types/react-dom` JSX derlemesi için eklendi.
