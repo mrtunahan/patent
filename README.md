@@ -76,6 +76,7 @@ Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8
 - Router'lar henüz iskelettir: Madde 7'deki 27 uç `501 Henüz uygulanmadı` döner; `/api/health` çalışır. Servis katmanı (normalize_tr, mükerrer kontrolü, silme engeli, liste sorgusu), CRUD mantığı ve detaylı UI sonraki aşamalardadır. Excel import/export yazılmamıştır.
 - 500 (işlenmeyen sunucu hatası) yanıtlarında `frame-ancestors` başlığı eklenmeyebilir (Starlette `ServerErrorMiddleware`).
 - Proxy'nin öneki silmediği bir kurulumda `ROOT_PATH` yollarda çift önek oluşturur: `/patent/api/...` istekleri JSON yerine `index.html` (200), uzantılı dosyalar (`/patent/assets/...`) 404 döner. Bu durum entegrasyon aşamasında ele alınacaktır.
+- `normalize_tr` (karşılaştırma/arama anahtarı, `core/text.py`) sınırları: (1) zaten küçük harfli ayrışık `i`+U+0307 girdisi `i`'ye eşitlenmez (`İ` ve `I`+U+0307 doğru işlenir); bilinçli sınırdır, Excel import (Aşama 13) öncesi yeniden değerlendirilecek. (2) Büyük `I` Türkçe kuralıyla `ı` olur: `Isparta` ≠ `isparta`; İngilizce yazılmış `FIRMA` ile `firma` eşleşmez. (3) `None` desteklenmez (`AttributeError`); çağıran boş/None değeri önceden ele almalıdır. (4) Aksan katlanmaz (`şaban` ≠ `saban`).
 - Testlerde Starlette `TestClient`, `httpx2` kurulmasını öneren bir kullanımdan-kaldırma uyarısı verir (zararsız).
 
 ## Onaylanan Kararlar
