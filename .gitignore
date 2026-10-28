@@ -1,0 +1,13 @@
+# Veritabanı
+data/*.db*
+
+# Bağımlılıklar / ortamlar
+node_modules/
+.venv/
+__pycache__/
+
+# Yerel ayarlar
+.env
+
+# Build çıktısı
+frontend/dist/
