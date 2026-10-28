@@ -50,6 +50,17 @@ cd backend && python -m app.main         # HOST/PORT .env'den okunur
 
 Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8001/api/health. `frontend/dist` backend başlarken denetlenir; build sonradan alındıysa backend yeniden başlatılmalıdır.
 
+### Excel aktarımı (tek seferlik, `scripts/excel_import.py`)
+
+```bash
+backend/.venv/bin/python scripts/excel_import.py            # DRY-RUN: DB'ye yazmaz, rapor verir (varsayılan)
+(cd backend && alembic upgrade head)                        # --apply için DB hazır olmalı
+backend/.venv/bin/python scripts/excel_import.py --apply    # tek transaction ile yazar
+backend/.venv/bin/python scripts/excel_import.py --file yol.xlsx
+```
+
+Varsayılan kaynak `data/source/patent-takip.xlsx`. Dry-run gerçek DB'ye dokunmaz (DB varsa kopyası, yoksa Alembic ile hazırlanmış geçici DB kullanılır). Aynı dosya iki kez `--apply` edilse kayıt çoğalmaz (mükerrer: normalize başlık + başvuru sahibi + tarih).
+
 ### Testler
 
 ```bash
@@ -120,6 +131,8 @@ Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8
 - `ROOT_PATH` ve `VITE_BASE_PATH`, proxy'nin dışarıya sunduğu alt yolla tutarlı olmalıdır (örn. ikisi de `/patent`). Backend `index.html` içindeki asset yollarını yeniden yazmaz; bunlar build zamanındaki `VITE_BASE_PATH`'e bağlıdır. `VITE_BASE_PATH` değişirse frontend yeniden build edilmelidir.
 - `RootPathMiddleware`, proxy prefix'i sildiği için `scope["path"]`/`raw_path`'e `ROOT_PATH` önekini geri ekler (ASGI'de `path` `root_path`'i içerir); Starlette yönlendirmede öneki çıkarır, uygulama yolları prefix'siz kalır. Aksi halde `Mount`/StaticFiles yanlış yol çözer.
 - `python -m app.main` (`if __name__ == "__main__"` bloğu) `uvicorn.run`'ı `settings.HOST`/`settings.PORT` ile çağırır (Madde 11); import anında sunucu başlamaz.
+- Excel aktarımı: `data/**/*.xlsx` `.gitignore`'dadır (gerçek veri commit'e girmez); `openpyxl==3.1.5` (+ `et_xmlfile==2.0.0`) yalnızca `scripts/excel_import.py` içindir. Varsayılan kaynak `data/source/patent-takip.xlsx`; dry-run varsayılandır, `--apply` tek transaction'dır.
+- Excel aktarımı kuralları: başlıklar ada göre eşlenir ("Ortaklar ve Oranları", "Notlar", "Bölüm", "Komisyon Onay Durumu" takma adları kabul); `No` ve şema dışı sütunlar (Kapsam, Komisyon Toplantı Tarihi/Onay Durumu, Mevcut Durum, Masraf) atlanır; Notlar aynen aktarılır; bölüm sütunundaki `"AYRILDI"` bölüm sayılmaz, bölüm BOŞ bırakılır ve raporda satır numaralarıyla listelenir; yeni başvuru sahibinin `department_id` değeri NULL kalır; tarihi boş veya çözülemeyen satır tarihsiz aktarılır ve raporlanır; boş satırlar tek satır "boş satır, atlandı" olarak raporlanır.
 - `.` ile başlayan yol segmentleri statik servisten 404 döner (güvenlik).
 - `/api` altında GET-only yollara HEAD/POST → 405 döner; bilinmeyen `/api` yolları 404 JSON'dur.
 - `RootPathMiddleware`, proxy'nin ÖNEKİ SİLDİĞİ varsayımıyla scope path'ine öneki geri ekler; proxy öneki silmiyorsa yollar çift önek olur (`/patent/api/...` JSON yerine `index.html` 200, uzantılı dosyalar 404 döner), bu durumda entegrasyon aşamasında ayrıca ele alınır.
