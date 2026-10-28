@@ -26,3 +26,7 @@ Bağlayıcı teknik şartname: [docs/patent-takip-otomasyon-plan.md](docs/patent
 - `Patent` many-to-one ilişkileri (applicant, department, fsmh_type, attorney_firm) vardır; `Applicant.department` ilişkisi eklenmez.
 - Migration revizyon kimliği `0001` elle verildi (`--rev-id 0001`).
 - İleride SQLite batch migration yazılırken `foreign_keys=ON` risklidir; FK'lar migration süresince geçici kapatılmalıdır (Alembic batch dokümanı).
+- Settings değerleri kırpılır; boş string geçerlidir.
+- Kırpma sonrası çakışan Settings anahtarları 422 döner.
+- `PatentListQuery` bilinmeyen query parametresini 422 ile reddeder.
+- Patent ortaklarının sırası servis katmanında id'ye göre verilecektir.
