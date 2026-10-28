@@ -1,11 +1,11 @@
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.errors import ConflictError, NotFoundError
 from app.core.text import turkish_sort_key
-from app.models import FsmhType, Patent
+from app.models import FsmhType
 from app.schemas import FsmhTypeIn
-from app.services.common import commit_or_conflict, name_taken
+from app.services.common import IN_USE_MESSAGE, commit_or_conflict, name_taken
 
 DUPLICATE_MESSAGE = "Bu adla bir FSMH türü zaten var."
 
@@ -43,15 +43,7 @@ def update_fsmh_type(db: Session, fsmh_type_id: int, data: FsmhTypeIn) -> FsmhTy
     return fsmh_type
 
 
-def _has_patents(db: Session, fsmh_type_id: int) -> bool:
-    # Silinmiş (deleted_at dolu) patentler dahil: kayıt veritabanında korunduğu için FK bağı sürer.
-    count = db.scalar(select(func.count()).select_from(Patent).where(Patent.fsmh_type_id == fsmh_type_id))
-    return bool(count)
-
-
 def delete_fsmh_type(db: Session, fsmh_type_id: int) -> None:
     fsmh_type = get_fsmh_type(db, fsmh_type_id)
-    if _has_patents(db, fsmh_type_id):
-        raise ConflictError("FSMH türü silinemez: bağlı patent kaydı var (silinmiş kayıtlar dahil).")
     db.delete(fsmh_type)
-    commit_or_conflict(db, "FSMH türü başka kayıtlarca kullanıldığı için silinemez.")
+    commit_or_conflict(db, IN_USE_MESSAGE)  # bağlı kayıt varsa FK hatası -> 409

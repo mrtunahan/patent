@@ -17,8 +17,15 @@ def name_taken(db: Session, model, column: str, value: str, exclude_id: int | No
     return any(row_id != exclude_id and normalize_tr(name) == target for row_id, name in rows)
 
 
+IN_USE_MESSAGE = "Bu kayıt başka kayıtlarca kullanıldığı için silinemez."
+
+
 def commit_or_conflict(db: Session, message: str) -> None:
-    """Commit eder; UNIQUE/FK ihlalinde (örn. yarış durumu) rollback yapıp ConflictError üretir."""
+    """Commit eder; IntegrityError'da (UNIQUE/FK) rollback yapıp 500 yerine ConflictError üretir.
+
+    Silmede IN_USE_MESSAGE verilir (FK: foreign_keys=ON ile bağlı kayıt), ekleme/güncellemede
+    ilgili "Bu adla ... zaten var." mesajı.
+    """
     try:
         db.commit()
     except IntegrityError as exc:

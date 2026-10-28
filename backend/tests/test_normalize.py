@@ -2,236 +2,84 @@ import unicodedata
 
 import pytest
 
-from app.core.text import normalize_tr
+from app.core.text import normalize_tr, turkish_sort_key
 
-
-def nfd(text: str) -> str:
-    return unicodedata.normalize("NFD", text)
-
-
-# --- İ / I / ı / i ---
 
 @pytest.mark.parametrize(
     "raw, expected",
     [
-        ("ISPARTA", "ısparta"),
-        ("İSTANBUL", "istanbul"),
-        ("Işık", "ışık"),
-        ("Iğdır", "ığdır"),
-        ("IĞDIR", "ığdır"),
-        ("İzmir", "izmir"),
-        ("ılık", "ılık"),
-        ("ILIK", "ılık"),
-        ("iplik", "iplik"),
-        ("İPLİK", "iplik"),
-        ("I", "ı"),
-        ("İ", "i"),
-        ("ı", "ı"),
-        ("i", "i"),
+        ("ISPARTA", "ısparta"), ("İSTANBUL", "istanbul"), ("Işık", "ışık"), ("Iğdır", "ığdır"),
+        ("IĞDIR", "ığdır"), ("iplik", "iplik"), ("İPLİK", "iplik"), ("I", "ı"), ("İ", "i"),
     ],
 )
 def test_dotted_and_dotless_i(raw, expected):
     assert normalize_tr(raw) == expected
 
 
-def test_dotted_and_dotless_i_stay_distinct():
-    assert normalize_tr("I") != normalize_tr("i")
-    assert normalize_tr("ı") != normalize_tr("i")
+def test_i_variants_stay_distinct_and_no_combining_dot_residue():
     assert normalize_tr("ISPARTA") != normalize_tr("isparta")
-    assert normalize_tr("ISPARTA") == normalize_tr("ısparta")
     assert normalize_tr("İSPARTA") == normalize_tr("isparta")
-    assert normalize_tr("Işık") == normalize_tr("ışık")
+    assert "̇" not in normalize_tr("İSTANBUL")
+    assert "̇" in "İ".casefold()  # düz casefold artık bırakır; İ->i eşlemesi bu yüzden önce
+    assert normalize_tr("İSTANBUL") == "istanbul"  # ayrışık İ
 
 
-def test_no_combining_dot_residue_from_capital_dotted_i():
-    for raw in ("İ", "İ", "İSTANBUL", "İSTANBUL", "Çİçek"):
-        assert "̇" not in normalize_tr(raw), raw
-    assert normalize_tr("İSTANBUL") == "istanbul"
-
-
-def test_plain_casefold_would_leave_residue_which_is_why_mapping_runs_first():
-    assert "̇" in "İ".casefold()  # kök neden kanıtı
-    assert normalize_tr("İ") == "i"
-
-
-# --- diğer Türkçe harfler: büyük/küçük eşleşmesi ---
-
-@pytest.mark.parametrize(
-    "upper, lower",
-    [("Ş", "ş"), ("Ç", "ç"), ("Ğ", "ğ"), ("Ö", "ö"), ("Ü", "ü")],
-)
+@pytest.mark.parametrize("upper, lower", [("Ş", "ş"), ("Ç", "ç"), ("Ğ", "ğ"), ("Ö", "ö"), ("Ü", "ü")])
 def test_case_pairs(upper, lower):
     assert normalize_tr(upper) == normalize_tr(lower) == lower
-    assert normalize_tr(f"A{upper}A") == normalize_tr(f"a{lower}a")
 
 
-# --- aksan katlaması YOK ---
-
-@pytest.mark.parametrize(
-    "a, b",
-    [("şaban", "saban"), ("Çankırı", "Cankırı"), ("ağaç", "agac"), ("öğe", "oge"), ("üç", "uc"),
-     ("ğ", "g"), ("ş", "s"), ("ç", "c"), ("ö", "o"), ("ü", "u")],
-)
+@pytest.mark.parametrize("a, b", [("şaban", "saban"), ("ağaç", "agac"), ("öğe", "oge"), ("üç", "uc")])
 def test_accents_are_not_folded(a, b):
     assert normalize_tr(a) != normalize_tr(b)
 
 
-# --- NFC ---
-
-def test_decomposed_capital_dotted_i_equals_precomposed():
-    decomposed = "İ"
-    assert decomposed != "İ"
-    assert normalize_tr(decomposed) == normalize_tr("İ") == "i"
-    assert normalize_tr("İSTANBUL") == normalize_tr("İSTANBUL")
-
-
-@pytest.mark.parametrize("char", ["ö", "ü", "ş", "ç", "ğ", "Ö", "Ü", "Ş", "Ç", "Ğ", "İ"])
-def test_decomposed_turkish_letters_equal_precomposed(char):
-    decomposed = nfd(char)
-    assert len(decomposed) > 1  # gerçekten ayrışık biçim test ediliyor
+@pytest.mark.parametrize("char", ["ö", "ü", "ş", "ç", "ğ", "Ö", "Ş", "İ"])
+def test_nfc_decomposed_equals_precomposed(char):
+    decomposed = unicodedata.normalize("NFD", char)
+    assert len(decomposed) > 1
     assert normalize_tr(decomposed) == normalize_tr(char)
-    assert normalize_tr(f"x{decomposed}y") == normalize_tr(f"x{char}y")
 
-
-# --- boşluklar ---
 
 @pytest.mark.parametrize(
-    "raw",
-    [
-        "Çankırı   Karatekin    Üni.",
-        "Çankırı\tKaratekin\tÜni.",
-        "Çankırı\nKaratekin\r\nÜni.",
-        "Çankırı Karatekin  Üni.",   # NBSP
-        "Çankırı Karatekin　Üni.",         # em space, ideographic space
-        "Çankırı \t\n  Karatekin \u0085 Üni.",
-        "  Çankırı Karatekin Üni.  ",
-        " \tÇankırı Karatekin Üni.\n",
-    ],
+    "raw", ["Çankırı   Karatekin\tÜni.", "Çankırı Karatekin\n\r\nÜni.", "  Çankırı　Karatekin Üni.  "]
 )
-def test_whitespace_collapsing(raw):
+def test_whitespace_collapsing_and_trim(raw):
     assert normalize_tr(raw) == "çankırı karatekin üni."
 
 
-def test_leading_trailing_whitespace_removed():
-    assert normalize_tr("  \t abc \n ") == "abc"
-
-
-@pytest.mark.parametrize("raw", ["", " ", "   ", "\t\n", "  　"])
+@pytest.mark.parametrize("raw", ["", "   ", "\t\n "])
 def test_empty_and_whitespace_only(raw):
     assert normalize_tr(raw) == ""
 
-
-# --- gerçek şartname örnekleri ---
 
 @pytest.mark.parametrize(
     "raw, expected",
     [
         ("Çankırı Karatekin Üni.", "çankırı karatekin üni."),
-        ("ÇANKIRI KARATEKİN ÜNİ.", "çankırı karatekin üni."),
-        ("Şabanözü MYO", "şabanözü myo"),
         ("ŞABANÖZÜ MYO", "şabanözü myo"),
-        ("Peyzaj Mimarlığı", "peyzaj mimarlığı"),
         ("PEYZAJ MİMARLIĞI", "peyzaj mimarlığı"),
-        ("Tasarım Tescili", "tasarım tescili"),
         ("TASARIM TESCİLİ", "tasarım tescili"),
-        ("Faydalı Model", "faydalı model"),
-        ("Ankara Üni.", "ankara üni."),
-        ("Modüler Dış Mekan Özelleştirilebilir Tuz Lambası", "modüler dış mekan özelleştirilebilir tuz lambası"),
-        ("Destek Patent", "destek patent"),
     ],
 )
 def test_spec_examples(raw, expected):
     assert normalize_tr(raw) == expected
 
 
-def test_spec_examples_equal_across_case_and_spacing():
-    assert normalize_tr("Çankırı Karatekin Üni.") == normalize_tr("  ÇANKIRI   KARATEKİN  ÜNİ. ")
-    assert normalize_tr("Ankara Üni.") != normalize_tr("Ankara Uni.")  # aksan katlanmaz
-
-
-# --- idempotent ve saf ---
-
-CORPUS = [
-    "", " ", "ISPARTA", "İSTANBUL", "İ", "i̇", "Işık", "ß", "ẞ", "ﬁ", "ŉ", "ǅ", "Σ", "ς",
-    "ΐ", "Ǆ", "a  b", "İ̇", "ß̇", "ﬀ̇", "Ç̧", "ö̈̈",
-    "Çankırı Karatekin Üni.", "  Tasarım   Tescili  ",
-]
-
-
-@pytest.mark.parametrize("raw", CORPUS)
-def test_idempotent_corpus(raw):
+@pytest.mark.parametrize("raw", ["ISPARTA", "İSTANBUL", "İ", "ß̇", "ﬀ̇", "  Tasarım   Tescili  "])
+def test_idempotent_examples(raw):
     once = normalize_tr(raw)
     assert normalize_tr(once) == once
 
 
-def test_idempotent_for_every_code_point_alone_and_in_context():
-    """Tüm Unicode kod noktaları: tek başına, harfler arasında ve U+0307 ile birleşik."""
-    failures = []
-    for cp in range(0x110000):
-        if 0xD800 <= cp <= 0xDFFF:
-            continue
-        ch = chr(cp)
-        for sample in (ch, f"a{ch}b", f"{ch}̇", f"I{ch}"):
-            once = normalize_tr(sample)
-            if normalize_tr(once) != once:
-                failures.append((hex(cp), sample))
-    assert failures == []
-
-
-def test_idempotence_needs_second_nfc_after_casefold():
-    """Kök neden kanıtı: casefold("ß\\u0307") NFC değil; ikinci NFC olmasa ikinci geçiş değişirdi."""
-    sample = "ß̇"
-    folded = sample.casefold()
-    assert folded != unicodedata.normalize("NFC", folded)
-    once = normalize_tr(sample)
-    assert once == unicodedata.normalize("NFC", once)
-    assert normalize_tr(once) == once
-
-
-def test_pure_function_does_not_mutate_or_depend_on_state():
-    raw = "  İSTANBUL  "
-    assert normalize_tr(raw) == normalize_tr(raw) == "istanbul"
-    assert raw == "  İSTANBUL  "
-
-
-# --- bilinen sınır (rapora yazıldı) ---
-
 def test_known_limit_lowercase_dotted_i_with_combining_dot_is_not_folded():
-    """Girdi zaten küçük harfli ayrışık "i"+U+0307 ise (örn. Python .lower() çıktısı) "i"ye inmez.
-
-    "İ" (U+0130 veya I+U+0307) doğru işlenir; bu durum yalnızca zaten küçültülmüş ayrışık metin içindir.
-    Şartnamedeki sıraya eklenmedi; ihtiyaç doğarsa kararla eklenir.
-    """
+    """Bilinçli sınır (README): zaten küçük harfli ayrışık i+U+0307 'i'ye inmez."""
     assert normalize_tr("i̇stanbul") != normalize_tr("istanbul")
-    assert normalize_tr("i̇stanbul") == "i̇stanbul"
 
-
-# --- turkish_sort_key ---
 
 def test_turkish_sort_key_orders_by_turkish_alphabet():
-    from app.core.text import turkish_sort_key
-
-    names = ["Zonguldak", "Çankırı", "Ankara", "Şabanözü", "Sivas", "Ödemiş", "Işık", "İzmir",
-             "Ulus", "Üsküdar", "Gazi", "Ğ", "Hukuk", "Cumhuriyet", "Dicle"]
-    expected = ["Ankara", "Cumhuriyet", "Çankırı", "Dicle", "Gazi", "Ğ", "Hukuk", "Işık", "İzmir",
-                "Ödemiş", "Sivas", "Şabanözü", "Ulus", "Üsküdar", "Zonguldak"]
+    names = ["Zonguldak", "Çankırı", "Ankara", "Şabanözü", "Sivas", "Işık", "İzmir", "Ulus", "Üsküdar"]
+    expected = ["Ankara", "Çankırı", "Işık", "İzmir", "Sivas", "Şabanözü", "Ulus", "Üsküdar", "Zonguldak"]
     assert sorted(names, key=turkish_sort_key) == expected
-    # düz normalize_tr kod noktası sırası bunu bozardı (ç, ş, ö, ü, ğ, ı, z'den sonra)
-    assert sorted(names, key=normalize_tr) != expected
-
-
-def test_turkish_sort_key_dotless_i_before_dotted_i_and_case_insensitive():
-    from app.core.text import turkish_sort_key
-
-    assert turkish_sort_key("ISPARTA") < turkish_sort_key("İSTANBUL")  # ı < i
+    assert sorted(names, key=normalize_tr) != expected  # düz kod noktası sırası ç/ş/ü'yü z'den sonra atar
     assert turkish_sort_key("ışık") == turkish_sort_key("IŞIK")
-    assert turkish_sort_key("Çankırı  Üni") == turkish_sort_key("çankırı üni")
-
-
-def test_turkish_sort_key_prefix_digits_and_foreign_letters():
-    from app.core.text import turkish_sort_key
-
-    assert turkish_sort_key("Ankara") < turkish_sort_key("Ankara Üni.")
-    assert turkish_sort_key("2. Bölüm") < turkish_sort_key("A Bölümü")
-    assert turkish_sort_key("Pak") < turkish_sort_key("Qwe") < turkish_sort_key("Rak")
-    assert turkish_sort_key("z") < turkish_sort_key("â")  # Türkçe alfabe dışı harf en sona

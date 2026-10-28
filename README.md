@@ -73,7 +73,7 @@ Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8
 ### Bilinen sınırlamalar
 
 - Kimlik doğrulama yoktur; uygulamaya erişen herkes tüm işlemleri yapabilir (şartname gereği).
-- Router'lar henüz iskelettir: Madde 7'deki 27 uç `501 Henüz uygulanmadı` döner; `/api/health` çalışır. Servis katmanı (normalize_tr, mükerrer kontrolü, silme engeli, liste sorgusu), CRUD mantığı ve detaylı UI sonraki aşamalardadır. Excel import/export yazılmamıştır.
+- Router'ların durumu: `departments` ve `fsmh_types` gerçek uçlardır; `patents` (5 uç) ve `settings` (2 uç) hâlâ `501 Henüz uygulanmadı` iskeletidir; `/api/health` çalışır. Patent yazma/liste/mükerrer uyarısı ve settings sonraki adımlardadır. Silme engeli ve pasife alma yönlendirmesi (Madde 6/2) MVP'de ertelendi (bkz. Onaylanan Kararlar). Detaylı UI ve Excel import/export yazılmamıştır.
 - 500 (işlenmeyen sunucu hatası) yanıtlarında `frame-ancestors` başlığı eklenmeyebilir (Starlette `ServerErrorMiddleware`).
 - Proxy'nin öneki silmediği bir kurulumda `ROOT_PATH` yollarda çift önek oluşturur: `/patent/api/...` istekleri JSON yerine `index.html` (200), uzantılı dosyalar (`/patent/assets/...`) 404 döner. Bu durum entegrasyon aşamasında ele alınacaktır.
 - `normalize_tr` (karşılaştırma/arama anahtarı, `core/text.py`) sınırları: (1) zaten küçük harfli ayrışık `i`+U+0307 girdisi `i`'ye eşitlenmez (`İ` ve `I`+U+0307 doğru işlenir); bilinçli sınırdır, Excel import (Aşama 13) öncesi yeniden değerlendirilecek. (2) Büyük `I` Türkçe kuralıyla `ı` olur: `Isparta` ≠ `isparta`; İngilizce yazılmış `FIRMA` ile `firma` eşleşmez. (3) `None` desteklenmez (`AttributeError`); çağıran boş/None değeri önceden ele almalıdır. (4) Aksan katlanmaz (`şaban` ≠ `saban`).
@@ -86,7 +86,7 @@ Arayüz ve API aynı porttan gelir: http://127.0.0.1:8001/ ve http://127.0.0.1:8
 - `routers/health.py` açılmaz; `GET /api/health` Aşama 8'de `main.py` içinde tanımlanır.
 - Frontend ek dosyaları (`index.html`, `tsconfig*.json`, `postcss.config.js`, `App.tsx`, `index.css`, `components/AppShell.tsx`) Aşama 9'da eklenir.
 - `created_at`/`updated_at` 5 tabloda bulunur (patents, applicants, departments, fsmh_types, attorney_firms).
-- Referans (başvuru sahibi, bölüm, FSMH türü, vekil firma) silinirken silinmiş patent dahil herhangi bir bağlı patent varsa `409` döner ve pasife alma yönlendirmesi yapılır.
+- Silme MVP'de doğrudandır; bağlı kayıt varsa FK hatası (`foreign_keys=ON`) 500 yerine genel `409 {"detail": "Bu kayıt başka kayıtlarca kullanıldığı için silinemez."}`'a çevrilir. Şartname Madde 6/2'deki silme engeli ve pasife alma yönlendirmesi MVP'de ertelendi, sonraki aşamada eklenecek. Patent soft delete (`deleted_at`) aynen kalır.
 - `normalize_tr`: `İ→i`, `I→ı`, casefold, Unicode NFC, iç boşluk tekilleştirme (tek yardımcı, `core/` içinde).
 - Mükerrer uyarısı: `409` + `{"duplicate": true}`; `?confirm_duplicate=true` ile onaylanıp kaydedilir.
 - Tailwind **v3.4.x**; sanal ortam `.venv`, **python3.12** ile oluşturulur.
