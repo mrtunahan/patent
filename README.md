@@ -24,3 +24,5 @@ Bağlayıcı teknik şartname: [docs/patent-takip-otomasyon-plan.md](docs/patent
 - `is_active`, `sort_order`, `created_at`, `updated_at` NOT NULL tanımlıdır (şartname NULL durumunu belirtmez).
 - Veritabanından gelen naive `datetime` değerleri UTC kabul edilir (Aşama 7 şemalarında uygulanacak).
 - `Patent` many-to-one ilişkileri (applicant, department, fsmh_type, attorney_firm) vardır; `Applicant.department` ilişkisi eklenmez.
+- Migration revizyon kimliği `0001` elle verildi (`--rev-id 0001`).
+- İleride SQLite batch migration yazılırken `foreign_keys=ON` risklidir; FK'lar migration süresince geçici kapatılmalıdır (Alembic batch dokümanı).
