@@ -21,3 +21,6 @@ Bağlayıcı teknik şartname: [docs/patent-takip-otomasyon-plan.md](docs/patent
 - Her aşamanın testi o aşamada yazılır.
 - `backend/pytest.ini` şartname ağacında yoktur; çıplak `pytest` komutunun `app` paketini bulabilmesi için eklenmiş araç yapılandırmasıdır.
 - `SessionLocal` varsayılan `autoflush=True` ile, `expire_on_commit=False` olarak kurulur (commit sonrası nesneler API yanıtında okunabilsin).
+- `is_active`, `sort_order`, `created_at`, `updated_at` NOT NULL tanımlıdır (şartname NULL durumunu belirtmez).
+- Veritabanından gelen naive `datetime` değerleri UTC kabul edilir (Aşama 7 şemalarında uygulanacak).
+- `Patent` many-to-one ilişkileri (applicant, department, fsmh_type, attorney_firm) vardır; `Applicant.department` ilişkisi eklenmez.
