@@ -13,3 +13,7 @@ __pycache__/
 
 # Build çıktısı
 frontend/dist/
+
+# Diğer
+.pytest_cache/
+.DS_Store
