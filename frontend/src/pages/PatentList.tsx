@@ -3,19 +3,17 @@ import { useMatch, useNavigate, useParams } from 'react-router-dom'
 import { ApiError, isAbort } from '../api/client'
 import { listApplicants, listAttorneyFirms, listDepartments, listFsmhTypes } from '../api/lookups'
 import { listPatents, removePatent } from '../api/patents'
+import { getSettings } from '../api/settings'
 import type { Lookups, Page, PatentListParams, PatentRead, SortDir, SortField } from '../api/types'
 import ConfirmDialog from '../components/ConfirmDialog'
 import FilterBar, { EMPTY_FILTERS, dateRangeInvalid, type Filters } from '../components/FilterBar'
 import Icon from '../components/Icon'
-import Pagination from '../components/Pagination'
+import Pagination, { PAGE_SIZES } from '../components/Pagination'
 import PatentDrawer from '../components/PatentDrawer'
 import PatentTable from '../components/PatentTable'
 import SummaryCards from '../components/SummaryCards'
 import { useToast } from '../components/Toast'
-
-// Çekmece rotaları (/patents/new, /patents/:id) bu bileşeni yeniden kullandığından görünüm durumu
-// (filtre, sıralama, sayfa) modül düzeyinde de tutulur; böylece çekmece açılıp kapanınca liste sıfırlanmaz.
-const view = { filters: EMPTY_FILTERS, sortBy: 'id' as SortField, sortDir: 'asc' as SortDir, page: 1, pageSize: 25 }
+import { view } from '../lib/listView'
 
 const toNumber = (value: string) => (value ? Number(value) : undefined)
 
@@ -41,8 +39,29 @@ export default function PatentList() {
   const [lookupTick, setLookupTick] = useState(0)
   const [deleteTarget, setDeleteTarget] = useState<PatentRead | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [ready, setReady] = useState(view.defaultsLoaded)
 
   Object.assign(view, { filters, sortBy, sortDir, page, pageSize })
+
+  // default_page_size ayarı: kullanıcı henüz sayfa boyutu seçmediyse ilk açılışta uygulanır (geçersiz/yoksa 25).
+  useEffect(() => {
+    if (view.defaultsLoaded) return
+    let cancelled = false
+    getSettings()
+      .then((settings) => {
+        const size = Number(settings.default_page_size)
+        if (!view.pageSizeChosen && PAGE_SIZES.includes(size)) setPageSize(size)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (cancelled) return
+        view.defaultsLoaded = true
+        setReady(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -63,7 +82,7 @@ export default function PatentList() {
   const invalidDates = dateRangeInvalid(filters)
 
   useEffect(() => {
-    if (invalidDates) return // tarih aralığı geçersizse istek atılmaz
+    if (!ready || invalidDates) return // ayarlar okunmadan veya tarih aralığı geçersizse istek atılmaz
     const controller = new AbortController()
     const params: PatentListParams = {
       q: filters.q.trim() || undefined,
@@ -95,7 +114,7 @@ export default function PatentList() {
         setStatus('error')
       })
     return () => controller.abort()
-  }, [filters, sortBy, sortDir, page, pageSize, refreshKey, invalidDates])
+  }, [filters, sortBy, sortDir, page, pageSize, refreshKey, invalidDates, ready])
 
   // Geçersiz /patents/abc adresi
   useEffect(() => {
@@ -222,6 +241,7 @@ export default function PatentList() {
           total={data?.total ?? 0}
           onPage={setPage}
           onPageSize={(size) => {
+            view.pageSizeChosen = true
             setPageSize(size)
             setPage(1)
           }}

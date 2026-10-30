@@ -108,3 +108,22 @@ export interface Lookups {
   fsmhTypes: FsmhTypeRead[]
   attorneyFirms: AttorneyFirmRead[]
 }
+
+export interface ApplicantIn {
+  full_name: string
+  department_id: number | null
+  email: string | null
+  is_active: boolean
+}
+
+export interface DepartmentIn {
+  name: string
+}
+
+export interface AttorneyFirmIn {
+  name: string
+  contact_info: string | null
+  is_active: boolean
+}
+
+export type Settings = Record<string, string>
