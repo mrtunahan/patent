@@ -61,6 +61,20 @@ backend/.venv/bin/python scripts/excel_import.py --file yol.xlsx
 
 Varsayılan kaynak `data/source/patent-takip.xlsx`. Dry-run gerçek DB'ye dokunmaz (DB varsa kopyası, yoksa Alembic ile hazırlanmış geçici DB kullanılır). Aynı dosya iki kez `--apply` edilse kayıt çoğalmaz (mükerrer: normalize başlık + başvuru sahibi + tarih).
 
+### Excel dışa aktarma
+
+Patent Listesi'nde **Excel Dışa Aktar** düğmesi, ekrandaki filtre ve sıralamayla (sayfalamasız, yalnızca aktif kayıtlar) `patent-takip-YYYY-MM-DD.xlsx` indirir; sütunlar Şartname Madde 3 sırasıdır. Doğrudan: `GET /api/patents/export?q=...&sort_by=...` (liste ucuyla aynı parametreler). Metin hücreleri formül olarak çalışmaz.
+
+### Yedekleme
+
+Uygulama KAPALIYKEN `data/patent.db` dosyasını kopyalayın (WAL kullanıldığından `-wal`/`-shm` dosyaları varsa onlarla birlikte) ya da çalışırken güvenli yol olarak:
+
+```bash
+sqlite3 data/patent.db ".backup 'data/source/patent-yedek-YYYYMMDD.db'"
+```
+
+`data/**/*.db*` ve `data/**/*.xlsx` git'e girmez; yedekler yalnızca yerelde tutulur.
+
 ### Testler
 
 ```bash
@@ -84,7 +98,7 @@ Varsayılan kaynak `data/source/patent-takip.xlsx`. Dry-run gerçek DB'ye dokunm
 ### Bilinen sınırlamalar
 
 - Kimlik doğrulama yoktur; uygulamaya erişen herkes tüm işlemleri yapabilir (şartname gereği).
-- Router'ların durumu: Madde 7'deki 27 uç gerçektir (`patents` liste/yazma, `applicants`, `departments`, `fsmh_types`, `attorney_firms`, `settings`) ve `/api/health` çalışır; iskelet (501) uç kalmadı. Madde 6/2 silme engeli kısmen uygulandı: aktif patent bağlıysa silme engellenir; silinmiş patentler fiziksel temizlenir. Pasife alma yönlendirmesi ertelendi (bkz. Onaylanan Kararlar). Arayüzde Patent Listesi ve form çekmecesi (Adım 7B) ile Başvuru Sahipleri, Bölümler ve Vekil Firmalar sayfaları tamamdır; Excel dışa aktarma çalışır (Adım 9). Arayüz sapmaları için bkz. "Adım 9 sapmaları".
+- Madde 7'deki 27 uç ve `/api/health` gerçektir; ek olarak `GET /api/patents/export` vardır. `/api/settings` uçları backend'de durur ama arayüzde Ayarlar sayfası yoktur.
 - 500 (işlenmeyen sunucu hatası) yanıtlarında `frame-ancestors` başlığı eklenmeyebilir (Starlette `ServerErrorMiddleware`).
 - Proxy'nin öneki silmediği bir kurulumda `ROOT_PATH` yollarda çift önek oluşturur: `/patent/api/...` istekleri JSON yerine `index.html` (200), uzantılı dosyalar (`/patent/assets/...`) 404 döner. Bu durum entegrasyon aşamasında ele alınacaktır.
 - `normalize_tr` (karşılaştırma/arama anahtarı, `core/text.py`) sınırları: (1) zaten küçük harfli ayrışık `i`+U+0307 girdisi `i`'ye eşitlenmez (`İ` ve `I`+U+0307 doğru işlenir); bilinçli sınırdır, Excel import (Aşama 13) öncesi yeniden değerlendirilecek. (2) Büyük `I` Türkçe kuralıyla `ı` olur: `Isparta` ≠ `isparta`; İngilizce yazılmış `FIRMA` ile `firma` eşleşmez. (3) `None` desteklenmez (`AttributeError`); çağıran boş/None değeri önceden ele almalıdır. (4) Aksan katlanmaz (`şaban` ≠ `saban`).
@@ -139,12 +153,48 @@ Varsayılan kaynak `data/source/patent-takip.xlsx`. Dry-run gerçek DB'ye dokunm
 - `/api` altında GET-only yollara HEAD/POST → 405 döner; bilinmeyen `/api` yolları 404 JSON'dur.
 - `RootPathMiddleware`, proxy'nin ÖNEKİ SİLDİĞİ varsayımıyla scope path'ine öneki geri ekler; proxy öneki silmiyorsa yollar çift önek olur (`/patent/api/...` JSON yerine `index.html` 200, uzantılı dosyalar 404 döner), bu durumda entegrasyon aşamasında ayrıca ele alınır.
 
-### Adım 9 sapmaları (kullanıcı kararıyla)
+## Şartnameden onaylanan sapmalar (tek liste)
 
-- **Ayarlar sayfası arayüzden çıkarıldı**; backend uçları (Madde 7: `GET/PUT /api/settings`) duruyor. Patent Listesi `default_page_size` okumaz, sayfa boyutu varsayılanı 25'tir.
-- **Vekil Durumu özet kartı çıkarıldı** (Toplam Kayıt ve Türe Göre kaldı); filtre çubuğundaki Vekil Durumu seçimi durur.
-- **Başvuru tarihi (bitiş) filtresi çıkarıldı**; "Başvuru tarihinden itibaren" kaldı. Backend `date_to` parametresi durur, arayüz göndermez.
-- **E-posta, İletişim Bilgisi ve Durum (aktif/pasif) alanları arayüzden çıkarıldı** (Başvuru Sahipleri ve Vekil Firmalar). Backend alanları durur; düzenlemede mevcut değerleri değiştirilmeden geri gönderilir, yeni kayıtta e-posta / iletişim boş, `is_active` true olur.
-- **Formdan hızlı kayıt ekleme:** patent çekmecesinde Başvuru Sahibi, Bölüm / Birim, FSMH Türü ve Vekil Firma alanlarının yanındaki "+" ile alan altında mini satırdan yeni kayıt eklenir (FSMH türü `sort_order` = mevcut en büyük + 1). Lookup listeleri tek ortak noktadan (`lib/lookups.tsx`) yüklenir ve yenilenir.
-- **Başvuru sahibinin varsayılan bölümü:** patent çekmecesinde başvuru sahibi seçilince Bölüm / Birim boşsa kişinin varsayılan bölümü otomatik seçilir. Varsayılan bölümler Excel'e (`data/source/patent-takip.xlsx`) göre bir kerelik API ile atandı (11 kişi; "AYRILDI" olan boş bırakıldı); bu veri değişikliğidir, commit'e girmez.
-- **Excel dışa aktarma — Madde 7 tablosuna ek uç:** `GET /api/patents/export` (liste ucuyla aynı filtre ve sıralama parametreleri, sayfalama yok, yalnızca aktif kayıtlar; `patent-takip-YYYY-MM-DD.xlsx`). Sütunlar Madde 3 sırasıyla; tarih gerçek tarih hücresi (GG.AA.YYYY); metin hücreleri string tipindedir, `=`, `+`, `-`, `@` ile başlayan değerler formül olarak çalışmaz. Kullanım: Patent Listesi'nde "Excel Dışa Aktar" düğmesi, aktif filtre ve sıralamayla indirir. `openpyxl` artık çalışma zamanında da kullanılır (zaten `requirements.txt`'te).
+Şartname metni (`docs/`) değiştirilmemiştir; aşağıdakiler kullanıcı onayıyla yapılan sapma ve eklemelerdir.
+
+1. **Silme sadeleştirmesi ve Adım 10 kuralı (Madde 6/2 kısmi):** bağlı AKTİF patent varsa silme engellenir (N'li mesaj); yalnızca silinmiş patentler bağlıysa onlar ortaklarıyla fiziksel silinir. Pasife alma yönlendirmesi uygulanmadı.
+2. **Arayüz paleti ve fontlar:** `docs/stitch-tasarim.html` esas alındı; Inter/Manrope ve Material Symbols Google Fonts'tan yüklenir (internetsiz çalışma şartı kaldırıldı).
+3. **Patent formu çekmecedir** (`/patents/new`, `/patents/:id`); çekmecede alan yanındaki "+" ile **hızlı kayıt ekleme** (başvuru sahibi, bölüm, FSMH türü, vekil firma) ve başvuru sahibi seçilince **varsayılan bölümün otomatik seçilmesi** vardır.
+4. **Ayarlar sayfası arayüzden çıkarıldı;** backend uçları (Madde 7) duruyor. Sayfa boyutu varsayılanı 25'tir.
+5. **Vekil Durumu özet kartı çıkarıldı;** filtre çubuğundaki Vekil Durumu seçimi durur.
+6. **Başvuru tarihi (bitiş) filtresi arayüzden çıkarıldı;** "Başvuru tarihinden itibaren" kaldı. Backend `date_to` parametresi durur.
+7. **E-posta, İletişim Bilgisi ve Durum (aktif/pasif) alanları arayüzden çıkarıldı;** düzenlemede mevcut değerleri korunarak geri gönderilir, yeni kayıtta e-posta/iletişim boş, `is_active` true.
+8. **Madde 7 tablosuna ek uç:** `GET /api/patents/export` (Excel dışa aktarma, `openpyxl`).
+9. **Ek dosyalar/yapılandırma:** `backend/pytest.ini`, `app/core/text.py` (`normalize_tr`), `core/spa.py`, `core/root_path.py`, `core/security_headers.py`; `.gitignore`'da `data/**/*.db*` ve `data/**/*.xlsx` kuralları; `components/`, `pages/`, `lib/` altındaki ek dosyalar.
+10. **Varsayılan bölümler** `data/source/patent-takip.xlsx`'e göre bir kerelik API ile atandı (11 kişi; "AYRILDI" olan boş bırakıldı). Veri değişikliğidir, kodda yoktur.
+
+Ayrıntılı teknik kararlar yukarıdaki "Onaylanan Kararlar" bölümündedir.
+
+## Madde 13 doğrulama matrisi
+
+| Gereksinim (Madde 13) | Kanıt | Durum |
+|---|---|---|
+| Her router için duman testi | `tests/test_api_skeleton.py`, `test_patents.py`, `test_patent_list.py`, `test_applicants.py`, `test_departments.py`, `test_fsmh_types.py`, `test_attorney_firms.py`, `test_settings.py`, `test_patent_export.py` | Tamam |
+| Ortak ad tekrarı (normalize) | `test_normalized_duplicate_409_on_post_and_put` (4 lookup), `test_normalize.py` | Tamam |
+| Soft delete davranışı | `test_patents.py::test_soft_delete_hides_record_but_keeps_row`, `test_patent_list.py::test_default_order_is_id_ascending_and_soft_deleted_are_hidden` | Tamam |
+| Mükerrer patent uyarısı (Madde 6/4) | `test_patents.py::test_duplicate_warning_409_then_confirm_saves` ve komşu testler | Tamam |
+| Migration boş DB'de `alembic upgrade head` | `tests/test_migrations.py` (`test_upgrade_head_creates_tables`, `test_upgrade_twice_is_noop`, `test_downgrade_then_upgrade_again`) | Tamam |
+| `PRAGMA journal_mode` = `wal` | `tests/test_database.py::test_pragmas_applied` | Tamam |
+| `npm run build` hatasız | `cd frontend && npm run build` | Tamam |
+| Production'da `/` ve `/api/health` aynı porttan | `tests/test_static.py`; elle: `python -m app.main` ile `curl :8001/`, `/api/health` (Kapanış turu) | Tamam |
+| `frame-ancestors 'self'` varsayılan, `X-Frame-Options` yok; `FRAME_ANCESTORS` ile değişir | `test_api_skeleton.py::test_default_frame_ancestors_header`, `test_custom_frame_ancestors_header`, `test_x_frame_options_stripped_if_inner_app_sets_it`; `test_static.py::test_frame_ancestors_on_static_and_fallback` | Tamam |
+| `ROOT_PATH` altında statik dosyalar ve `/api` | `test_static.py::test_root_path_with_static_and_api`, `test_api_skeleton.py::test_root_path_*` | Tamam |
+| `VITE_BASE_PATH` ile alt yol | Otomatik test yok; yalnızca elle doğrulandı | Elle doğrulandı |
+| Madde 6/2 bağlı patent varken silme engeli | `tests/test_delete_rule.py` | Kısmen (aktif patent bağlıysa engel; pasife alma yönlendirmesi yok) |
+| Madde 6/2 pasife alma yönlendirmesi | — | MVP'de ertelendi |
+| Madde 6/6 tarih biçimi (ISO / GG.AA.YYYY) | `test_schemas.py`; arayüzde `lib/format.ts` (elle) | Tamam |
+
+## Yol haritası
+
+- a) Pasife alma yönlendirmesi (Madde 6/2): silme engelinde başvuru sahibi / vekil firma için `is_active=false` önerisi.
+- b) Ana sisteme entegrasyon (iframe / reverse proxy / API; B9, B10): `ROOT_PATH`, `VITE_BASE_PATH` ve `frame-ancestors` ayarları entegrasyon biçimi netleşince gerçek ortamda denenecek.
+- c) Şartname dışı alanlar gerekirse (Kapsam, Komisyon, Mevcut Durum, Masraf); şu an Excel aktarımında atlanıyor.
+- d) `q` aramasına bölüm adı eklenmesi.
+- e) Excel'deki yazım düzeltmeleri (örn. "İtfayecilik" yazımı).
+- f) `settings` backend uçlarının sadeleştirilmesi veya kaldırılması kararı.
+- g) FSMH türleri için yönetim sayfası (düzenleme/silme şu an yalnızca API ile).
