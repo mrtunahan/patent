@@ -17,6 +17,8 @@ pip install -r backend/requirements.txt
 cp .env.example .env          # .env git'e girmez; değerleri ihtiyaca göre düzenleyin
 ```
 
+> **Veri repoda yoktur:** `data/` içeriği (veritabanı, Excel, yedekler) git'e girmez. Mevcut Excel listenizi aktarmak için dosyayı `data/source/patent-takip.xlsx` olarak koyup aşağıdaki "Excel aktarımı" adımlarını izleyin; Excel yoksa boş veritabanı ile başlanır.
+
 ### Veritabanı
 
 ```bash
