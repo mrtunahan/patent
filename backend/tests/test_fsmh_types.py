@@ -9,7 +9,6 @@ from app.database import create_db_engine
 
 URL = "/api/fsmh_types"
 ALEMBIC_INI = Path(__file__).resolve().parents[1] / "alembic.ini"
-IN_USE = {"detail": "Bu kayıt başka kayıtlarca kullanıldığı için silinemez."}
 
 
 def post(client, name, sort_order=None):
@@ -97,9 +96,9 @@ def test_delete_without_links_is_204(client):
     assert client.delete(f"{URL}/{t['id']}").status_code == 204
 
 
-def test_delete_with_linked_patent_is_generic_409(client, make_patent):
+def test_delete_with_active_linked_patent_is_409(client, make_patent):
     t = post(client, "Bağlı").json()
     make_patent(fsmh_type_id=t["id"])
     r = client.delete(f"{URL}/{t['id']}")
-    assert r.status_code == 409 and r.json() == IN_USE
+    assert r.status_code == 409 and r.json() == {"detail": "Bu kayıt 1 aktif patentte kullanılıyor, silinemez."}
     assert client.get(f"{URL}/{t['id']}").status_code == 200

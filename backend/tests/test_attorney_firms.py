@@ -1,7 +1,6 @@
 import pytest
 
 URL = "/api/attorney_firms"
-IN_USE = {"detail": "Bu kayıt başka kayıtlarca kullanıldığı için silinemez."}
 
 
 def post(client, name, **extra):
@@ -61,9 +60,9 @@ def test_invalid_body_422(client, body):
     assert client.post(URL, json=body).status_code == 422
 
 
-def test_delete_with_linked_patent_is_generic_409(client, make_patent):
+def test_delete_with_active_linked_patent_is_409(client, make_patent):
     firm = post(client, "Bağlı").json()
     make_patent(attorney_firm_id=firm["id"])
     r = client.delete(f"{URL}/{firm['id']}")
-    assert r.status_code == 409 and r.json() == IN_USE
+    assert r.status_code == 409 and r.json() == {"detail": "Bu kayıt 1 aktif patentte kullanılıyor, silinemez."}
     assert client.get(f"{URL}/{firm['id']}").status_code == 200

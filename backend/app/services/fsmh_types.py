@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import ConflictError, NotFoundError
 from app.core.text import turkish_sort_key
-from app.models import FsmhType
+from app.models import FsmhType, Patent
 from app.schemas import FsmhTypeIn
-from app.services.common import IN_USE_MESSAGE, commit_or_conflict, name_taken
+from app.services.common import commit_or_conflict, delete_lookup, name_taken
 
 DUPLICATE_MESSAGE = "Bu adla bir FSMH türü zaten var."
 
@@ -45,5 +45,4 @@ def update_fsmh_type(db: Session, fsmh_type_id: int, data: FsmhTypeIn) -> FsmhTy
 
 def delete_fsmh_type(db: Session, fsmh_type_id: int) -> None:
     fsmh_type = get_fsmh_type(db, fsmh_type_id)
-    db.delete(fsmh_type)
-    commit_or_conflict(db, IN_USE_MESSAGE)  # bağlı kayıt varsa FK hatası -> 409
+    delete_lookup(db, fsmh_type, Patent.fsmh_type_id)

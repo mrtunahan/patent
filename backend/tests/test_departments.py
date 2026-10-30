@@ -1,7 +1,6 @@
 import pytest
 
 URL = "/api/departments"
-IN_USE = {"detail": "Bu kayıt başka kayıtlarca kullanıldığı için silinemez."}
 
 
 def post(client, name):
@@ -73,9 +72,9 @@ def test_delete_without_links_is_204(client):
     assert client.get(URL).json() == []
 
 
-def test_delete_with_linked_patent_is_generic_409(client, make_patent):
+def test_delete_with_active_linked_patent_is_409(client, make_patent):
     dept = post(client, "Bağlı").json()
     make_patent(department_id=dept["id"])
     r = client.delete(f"{URL}/{dept['id']}")
-    assert r.status_code == 409 and r.json() == IN_USE
+    assert r.status_code == 409 and r.json() == {"detail": "Bu kayıt 1 aktif patentte kullanılıyor, silinemez."}
     assert client.get(f"{URL}/{dept['id']}").status_code == 200  # rollback: kayıt duruyor

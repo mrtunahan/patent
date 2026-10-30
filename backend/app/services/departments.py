@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import ConflictError, NotFoundError
 from app.core.text import turkish_sort_key
-from app.models import Department
+from app.models import Department, Patent
 from app.schemas import DepartmentIn
-from app.services.common import IN_USE_MESSAGE, commit_or_conflict, name_taken
+from app.services.common import commit_or_conflict, delete_lookup, name_taken
 
 DUPLICATE_MESSAGE = "Bu adla bir bölüm zaten var."
 
@@ -44,5 +44,4 @@ def update_department(db: Session, department_id: int, data: DepartmentIn) -> De
 
 def delete_department(db: Session, department_id: int) -> None:
     department = get_department(db, department_id)
-    db.delete(department)
-    commit_or_conflict(db, IN_USE_MESSAGE)  # bağlı kayıt varsa FK hatası -> 409
+    delete_lookup(db, department, Patent.department_id, department=True)

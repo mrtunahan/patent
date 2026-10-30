@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import ConflictError, NotFoundError
 from app.core.text import turkish_sort_key
-from app.models import AttorneyFirm
+from app.models import AttorneyFirm, Patent
 from app.schemas import AttorneyFirmIn
-from app.services.common import IN_USE_MESSAGE, commit_or_conflict, name_taken
+from app.services.common import commit_or_conflict, delete_lookup, name_taken
 
 DUPLICATE_MESSAGE = "Bu adla bir vekil firma zaten var."
 
@@ -46,5 +46,4 @@ def update_attorney_firm(db: Session, firm_id: int, data: AttorneyFirmIn) -> Att
 
 def delete_attorney_firm(db: Session, firm_id: int) -> None:
     firm = get_attorney_firm(db, firm_id)
-    db.delete(firm)
-    commit_or_conflict(db, IN_USE_MESSAGE)  # bağlı kayıt varsa FK hatası -> 409
+    delete_lookup(db, firm, Patent.attorney_firm_id)
