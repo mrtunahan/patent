@@ -1,21 +1,22 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useMatch, useNavigate, useParams } from 'react-router-dom'
 import { ApiError, isAbort } from '../api/client'
-import { listApplicants, listAttorneyFirms, listDepartments, listFsmhTypes } from '../api/lookups'
-import { listPatents, removePatent } from '../api/patents'
-import { getSettings } from '../api/settings'
-import type { Lookups, Page, PatentListParams, PatentRead, SortDir, SortField } from '../api/types'
+import { exportPatents, listPatents, removePatent } from '../api/patents'
+import type { Page, PatentListParams, PatentRead, SortDir, SortField } from '../api/types'
 import ConfirmDialog from '../components/ConfirmDialog'
-import FilterBar, { EMPTY_FILTERS, dateRangeInvalid, type Filters } from '../components/FilterBar'
+import FilterBar, { EMPTY_FILTERS, type Filters } from '../components/FilterBar'
 import Icon from '../components/Icon'
-import Pagination, { PAGE_SIZES } from '../components/Pagination'
+import Pagination from '../components/Pagination'
 import PatentDrawer from '../components/PatentDrawer'
 import PatentTable from '../components/PatentTable'
 import SummaryCards from '../components/SummaryCards'
 import { useToast } from '../components/Toast'
 import { view } from '../lib/listView'
+import { useLookups } from '../lib/lookups'
 
 const toNumber = (value: string) => (value ? Number(value) : undefined)
+// Tarih kutusu yıl yazılırken ara değerler (0002-..., 20260-...) üretir; yalnızca tam ve makul tarih sorguya girer.
+const validDate = (value: string) => (/^\d{4}-\d{2}-\d{2}$/.test(value) && value >= '1900-01-01' ? value : undefined)
 
 export default function PatentList() {
   const navigate = useNavigate()
@@ -34,70 +35,30 @@ export default function PatentList() {
   const [status, setStatus] = useState<'loading' | 'error' | 'ready'>('loading')
   const [errorMessage, setErrorMessage] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
-  const [lookups, setLookups] = useState<Lookups | null>(null)
-  const [lookupError, setLookupError] = useState(false)
-  const [lookupTick, setLookupTick] = useState(0)
+  const { lookups, error: lookupError, reload: reloadLookups } = useLookups()
   const [deleteTarget, setDeleteTarget] = useState<PatentRead | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const [ready, setReady] = useState(view.defaultsLoaded)
+  const [exporting, setExporting] = useState(false)
 
   Object.assign(view, { filters, sortBy, sortDir, page, pageSize })
 
-  // default_page_size ayarı: kullanıcı henüz sayfa boyutu seçmediyse ilk açılışta uygulanır (geçersiz/yoksa 25).
-  useEffect(() => {
-    if (view.defaultsLoaded) return
-    let cancelled = false
-    getSettings()
-      .then((settings) => {
-        const size = Number(settings.default_page_size)
-        if (!view.pageSizeChosen && PAGE_SIZES.includes(size)) setPageSize(size)
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (cancelled) return
-        view.defaultsLoaded = true
-        setReady(true)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+
+  // Liste ve Excel dışa aktarma aynı filtre / sıralama parametrelerini kullanır.
+  const filterParams = (): Omit<PatentListParams, 'page' | 'page_size'> => ({
+    q: filters.q.trim() || undefined,
+    applicant_id: toNumber(filters.applicantId),
+    department_id: toNumber(filters.departmentId),
+    fsmh_type_id: toNumber(filters.fsmhTypeId),
+    attorney_firm_id: toNumber(filters.attorneyFirmId),
+    has_attorney: filters.hasAttorney ? filters.hasAttorney === 'true' : undefined,
+    date_from: validDate(filters.dateFrom),
+    sort_by: sortBy,
+    sort_dir: sortDir,
+  })
 
   useEffect(() => {
     const controller = new AbortController()
-    setLookupError(false)
-    Promise.all([
-      listApplicants(controller.signal),
-      listDepartments(controller.signal),
-      listFsmhTypes(controller.signal),
-      listAttorneyFirms(controller.signal),
-    ])
-      .then(([applicants, departments, fsmhTypes, attorneyFirms]) => setLookups({ applicants, departments, fsmhTypes, attorneyFirms }))
-      .catch((err) => {
-        if (!isAbort(err)) setLookupError(true)
-      })
-    return () => controller.abort()
-  }, [lookupTick])
-
-  const invalidDates = dateRangeInvalid(filters)
-
-  useEffect(() => {
-    if (!ready || invalidDates) return // ayarlar okunmadan veya tarih aralığı geçersizse istek atılmaz
-    const controller = new AbortController()
-    const params: PatentListParams = {
-      q: filters.q.trim() || undefined,
-      applicant_id: toNumber(filters.applicantId),
-      department_id: toNumber(filters.departmentId),
-      fsmh_type_id: toNumber(filters.fsmhTypeId),
-      attorney_firm_id: toNumber(filters.attorneyFirmId),
-      has_attorney: filters.hasAttorney ? filters.hasAttorney === 'true' : undefined,
-      date_from: filters.dateFrom || undefined,
-      date_to: filters.dateTo || undefined,
-      sort_by: sortBy,
-      sort_dir: sortDir,
-      page,
-      page_size: pageSize,
-    }
+    const params: PatentListParams = { ...filterParams(), page, page_size: pageSize }
     setStatus('loading')
     listPatents(params, controller.signal)
       .then((result) => {
@@ -114,7 +75,7 @@ export default function PatentList() {
         setStatus('error')
       })
     return () => controller.abort()
-  }, [filters, sortBy, sortDir, page, pageSize, refreshKey, invalidDates, ready])
+  }, [filters, sortBy, sortDir, page, pageSize, refreshKey])
 
   // Geçersiz /patents/abc adresi
   useEffect(() => {
@@ -172,6 +133,24 @@ export default function PatentList() {
     refresh()
   }
 
+  const runExport = async () => {
+    setExporting(true)
+    try {
+      const { blob, filename } = await exportPatents(filterParams())
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename ?? `patent-takip-${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      toast(err instanceof ApiError ? `Dışa aktarılamadı: ${err.detail}` : 'Dışa aktarılamadı.')
+    }
+    setExporting(false)
+  }
+
   const drawerMode: 'new' | number | null = isNew ? 'new' : editId
 
   return (
@@ -186,14 +165,25 @@ export default function PatentList() {
           <h1 className="mt-space-xs font-headline-lg text-headline-lg tracking-tight text-on-surface">Patent Takip Listesi</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">Patent / FSMH başvurularının takip listesi</p>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate('/patents/new')}
-          className="flex h-10 items-center justify-center gap-space-xs self-start rounded-lg bg-primary px-space-lg font-label-lg text-label-lg text-on-primary shadow-md transition-all hover:bg-primary/95 lg:self-auto"
-        >
-          <Icon name="add_circle" className="text-[20px]" />
-          Yeni Patent Ekle
-        </button>
+        <div className="flex flex-wrap items-center gap-space-sm self-start lg:self-auto">
+          <button
+            type="button"
+            onClick={() => void runExport()}
+            disabled={exporting}
+            className="flex h-10 items-center justify-center gap-space-xs rounded-lg bg-secondary-container px-space-lg font-label-lg text-label-lg text-on-secondary-container transition-colors hover:bg-surface-container-high disabled:opacity-60"
+          >
+            <Icon name="table_view" className="text-[20px]" />
+            {exporting ? 'Hazırlanıyor...' : 'Excel Dışa Aktar'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/patents/new')}
+            className="flex h-10 items-center justify-center gap-space-xs rounded-lg bg-primary px-space-lg font-label-lg text-label-lg text-on-primary shadow-md transition-all hover:bg-primary/95"
+          >
+            <Icon name="add_circle" className="text-[20px]" />
+            Yeni Patent Ekle
+          </button>
+        </div>
       </div>
 
       <SummaryCards fsmhTypes={lookups?.fsmhTypes ?? null} refreshKey={refreshKey} />
@@ -201,7 +191,7 @@ export default function PatentList() {
       {lookupError && (
         <div role="alert" className="flex items-center justify-between gap-space-md rounded-lg bg-error-container p-space-sm font-body-md text-body-md text-on-error-container">
           <span>Filtre listeleri yüklenemedi.</span>
-          <button type="button" onClick={() => setLookupTick((n) => n + 1)} className="rounded-lg bg-primary px-space-md py-space-xs font-label-md text-label-md text-on-primary">
+          <button type="button" onClick={() => void reloadLookups().catch(() => {})} className="rounded-lg bg-primary px-space-md py-space-xs font-label-md text-label-md text-on-primary">
             Yeniden dene
           </button>
         </div>
@@ -241,7 +231,6 @@ export default function PatentList() {
           total={data?.total ?? 0}
           onPage={setPage}
           onPageSize={(size) => {
-            view.pageSizeChosen = true
             setPageSize(size)
             setPage(1)
           }}
@@ -249,7 +238,7 @@ export default function PatentList() {
       </div>
 
       {drawerMode !== null && (
-        <PatentDrawer key={String(drawerMode)} mode={drawerMode} lookups={lookups} onClose={closeDrawer} onSaved={drawerSaved} onNotFound={drawerNotFound} />
+        <PatentDrawer key={String(drawerMode)} mode={drawerMode} onClose={closeDrawer} onSaved={drawerSaved} onNotFound={drawerNotFound} />
       )}
       <ConfirmDialog
         open={deleteTarget !== null}

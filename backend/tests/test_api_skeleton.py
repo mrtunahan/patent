@@ -89,6 +89,9 @@ def test_every_madde7_route_is_in_openapi(client):
             if path.startswith(f"/api/{name}/1"):
                 template = path.replace("/1", "/{patent_id}" if name == "patents" else "/{item_id}")
         assert method.lower() in paths[template], (method, path)
+    # Madde 7 tablosuna ek uç (Adım 9): Excel dışa aktarma
+    assert list(paths["/api/patents/export"]) == ["get"]
+    assert sum(len(item) for item in paths.values()) == 27 + 1 + 1  # +health +export
 
 
 def test_openapi_uses_phase7_schemas(client):

@@ -5,7 +5,6 @@ import AttorneyFirms from './pages/AttorneyFirms'
 import Departments from './pages/Departments'
 import NotFound from './pages/NotFound'
 import PatentList from './pages/PatentList'
-import Settings from './pages/Settings'
 
 export default function App() {
   return (
@@ -18,7 +17,6 @@ export default function App() {
         <Route path="applicants" element={<Applicants />} />
         <Route path="departments" element={<Departments />} />
         <Route path="attorney-firms" element={<AttorneyFirms />} />
-        <Route path="settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

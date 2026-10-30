@@ -65,7 +65,9 @@ SortBy = Literal[
 ]
 
 
-class PatentListQuery(InSchema):
+class PatentFilterQuery(InSchema):
+    """Liste ve Excel dışa aktarma ucunun ortak filtre/sıralama parametreleri."""
+
     q: Annotated[str | None, BeforeValidator(strip_or_none)] = None
     applicant_id: int | None = None
     department_id: int | None = None
@@ -76,14 +78,17 @@ class PatentListQuery(InSchema):
     has_attorney: bool | None = None
     sort_by: SortBy = "id"
     sort_dir: Literal["asc", "desc"] = "asc"
-    page: int = Field(default=1, ge=1)
-    page_size: int = Field(default=25, ge=1, le=100)
 
     @model_validator(mode="after")
     def _check_date_range(self):
         if self.date_from and self.date_to and self.date_from > self.date_to:
             raise ValueError("date_from, date_to'dan büyük olamaz")
         return self
+
+
+class PatentListQuery(PatentFilterQuery):
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=25, ge=1, le=100)
 
 
 PatentListResponse = Page[PatentRead]

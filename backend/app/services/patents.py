@@ -5,7 +5,7 @@ from app.core.errors import DuplicateWarningError, NotFoundError, UnprocessableE
 from app.core.text import normalize_tr, turkish_sort_key
 from app.core.utils import utc_now
 from app.models import Applicant, AttorneyFirm, Department, FsmhType, Patent, PatentPartner
-from app.schemas import PatentIn, PatentListQuery, PatentListResponse, PatentRead
+from app.schemas import PatentFilterQuery, PatentIn, PatentListQuery, PatentListResponse, PatentRead
 from app.services.common import commit_or_conflict
 
 SAVE_ERROR_MESSAGE = "Kayıt kaydedilemedi: ilişkili kayıt değişmiş olabilir."
@@ -132,7 +132,8 @@ def _sort_value(patent: Patent, sort_by: str):
             return patent.application_date
 
 
-def list_patents(db: Session, query: PatentListQuery) -> PatentListResponse:
+def filtered_patents(db: Session, query: PatentFilterQuery) -> list[Patent]:
+    """Aktif kayıtlar; filtre ve sıralama uygulanmış, sayfalamasız (liste ve dışa aktarma ortak)."""
     stmt = (
         select(Patent)
         .where(Patent.deleted_at.is_(None))
@@ -169,8 +170,11 @@ def list_patents(db: Session, query: PatentListQuery) -> PatentListResponse:
     keyed = [(p, _sort_value(p, query.sort_by)) for p in patents]
     present = sorted((x for x in keyed if x[1] is not None), key=lambda x: x[1], reverse=query.sort_dir == "desc")
     missing = [x for x in keyed if x[1] is None]  # None her zaman sona (asc ve desc)
-    ordered = [p for p, _ in present + missing]
+    return [p for p, _ in present + missing]
 
+
+def list_patents(db: Session, query: PatentListQuery) -> PatentListResponse:
+    ordered = filtered_patents(db, query)
     start = (query.page - 1) * query.page_size
     page_items = ordered[start : start + query.page_size]
     return PatentListResponse(

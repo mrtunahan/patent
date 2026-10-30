@@ -8,8 +8,6 @@ import Icon from './Icon'
 interface Summary {
   total: number
   byType: { id: number; name: string; count: number }[]
-  withAttorney: number
-  withoutAttorney: number
 }
 
 const count = (params: Parameters<typeof listPatents>[0], signal: AbortSignal) =>
@@ -41,15 +39,11 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
     Promise.all([
       count({}, signal),
       Promise.all(fsmhTypes.map((type) => count({ fsmh_type_id: type.id }, signal))),
-      count({ has_attorney: true }, signal),
-      count({ has_attorney: false }, signal),
     ])
-      .then(([total, perType, withAttorney, withoutAttorney]) =>
+      .then(([total, perType]) =>
         setSummary({
           total,
           byType: fsmhTypes.map((type, index) => ({ id: type.id, name: type.name, count: perType[index] })),
-          withAttorney,
-          withoutAttorney,
         }),
       )
       .catch((err) => {
@@ -61,7 +55,7 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
   const value = (n: number | undefined) => (n === undefined ? '-' : n)
 
   return (
-    <div className="grid grid-cols-1 gap-space-md md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-space-md sm:grid-cols-2">
       <Card title="Toplam Kayıt" icon="folder_special" iconClass="bg-primary-fixed text-on-primary-fixed">
         <div className="mt-space-md flex items-baseline gap-space-sm">
           <span className="font-display-lg text-display-lg font-bold tracking-tight text-on-surface">{value(summary?.total)}</span>
@@ -83,19 +77,6 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
           ))}
         </ul>
         <div className="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-secondary/5" />
-      </Card>
-      <Card title="Vekil Durumu" icon="business_center" iconClass="bg-tertiary-fixed text-on-tertiary-fixed">
-        <div className="mt-space-md flex items-baseline gap-space-lg">
-          <div className="flex items-baseline gap-space-xs">
-            <span className="font-display-lg text-display-lg font-bold tracking-tight text-on-surface">{value(summary?.withAttorney)}</span>
-            <span className="font-label-md text-label-md text-on-surface-variant">vekilli</span>
-          </div>
-          <div className="flex items-baseline gap-space-xs">
-            <span className="font-headline-md text-headline-md font-semibold text-on-surface-variant">{value(summary?.withoutAttorney)}</span>
-            <span className="font-label-md text-label-md text-on-surface-variant">vekilsiz</span>
-          </div>
-        </div>
-        <div className="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-tertiary/5" />
       </Card>
     </div>
   )

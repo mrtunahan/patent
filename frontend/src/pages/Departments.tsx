@@ -6,6 +6,7 @@ import DrawerShell from '../components/DrawerShell'
 import { Field, controlClass } from '../components/formStyles'
 import { PageHeader, RowActions, SearchCard, TableCard, cell } from '../components/ListPage'
 import { useToast } from '../components/Toast'
+import { useLookups } from '../lib/lookups'
 import { describeError, matchesQuery, useList, useRowDelete } from '../lib/hooks'
 
 function DepartmentDrawer({ record, onClose, onSaved, onDeleteFailed }: { record: DepartmentRead | null; onClose: () => void; onSaved: (message: string) => void; onDeleteFailed: (message: string) => void }) {
@@ -58,16 +59,22 @@ function DepartmentDrawer({ record, onClose, onSaved, onDeleteFailed }: { record
 
 export default function Departments() {
   const toast = useToast()
+  const { reload: reloadLookups } = useLookups()
   const list = useList(listDepartments)
   const [q, setQ] = useState('')
   const [drawer, setDrawer] = useState<null | 'new' | DepartmentRead>(null)
-  const del = useRowDelete<DepartmentRead>(removeDepartment, list.reload)
 
   const visible = (list.items ?? []).filter((d) => matchesQuery(q, d.name))
+  // ortak lookup listesi de yenilenir (filtre çubuğu ve patent çekmecesi yeni durumu görsün)
+  const refresh = () => {
+    list.reload()
+    void reloadLookups().catch(() => {})
+  }
+  const del = useRowDelete<DepartmentRead>(removeDepartment, refresh)
   const finish = (message: string) => {
     toast(message)
     setDrawer(null)
-    list.reload()
+    refresh()
   }
 
   return (

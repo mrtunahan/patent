@@ -1,4 +1,4 @@
-import { request, type Query } from './client'
+import { download, request, type Query } from './client'
 import type { Page, PatentIn, PatentListParams, PatentRead } from './types'
 
 export function listPatents(params: PatentListParams, signal?: AbortSignal) {
@@ -25,4 +25,9 @@ export function updatePatent(id: number, body: PatentIn, confirmDuplicate = fals
 
 export function removePatent(id: number) {
   return request<void>('DELETE', `/patents/${id}`)
+}
+
+// Liste ucuyla aynı filtre / sıralama parametreleri; sayfalama yok.
+export function exportPatents(params: Omit<PatentListParams, 'page' | 'page_size'>) {
+  return download('/patents/export', params as Query)
 }

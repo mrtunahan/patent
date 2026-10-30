@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 import { ApiError } from '../api/client'
 import { createPatent, getPatent, removePatent, updatePatent } from '../api/patents'
-import type { Lookups, PatentIn } from '../api/types'
+import { createApplicant, createAttorneyFirm, createDepartment, createFsmhType } from '../api/lookups'
+import type { PatentIn } from '../api/types'
+import { useLookups } from '../lib/lookups'
 import ConfirmDialog from './ConfirmDialog'
 import DrawerShell from './DrawerShell'
 import { Field, controlClass, labelClass } from './formStyles'
+import LookupField from './LookupField'
 import PartnerInput from './PartnerInput'
 
 interface Props {
   mode: 'new' | number
-  lookups: Lookups | null
   onClose: () => void
   onSaved: (message: string) => void
   onNotFound: () => void
@@ -30,8 +32,9 @@ const EMPTY: FormState = {
   title: '', applicantId: '', departmentId: '', fsmhTypeId: '', attorneyFirmId: '', partners: [], applicationDate: '', notes: '',
 }
 
-export default function PatentDrawer({ mode, lookups, onClose, onSaved, onNotFound }: Props) {
+export default function PatentDrawer({ mode, onClose, onSaved, onNotFound }: Props) {
   const isNew = mode === 'new'
+  const { lookups, reload } = useLookups()
   const [form, setForm] = useState<FormState>(EMPTY)
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
@@ -72,6 +75,13 @@ export default function PatentDrawer({ mode, lookups, onClose, onSaved, onNotFou
       })
     return () => controller.abort()
   }, [isNew, mode, onNotFound])
+
+  // Kaydı oluşturur, ortak lookup listesini yeniler; yeni id'yi döner (hata çağırana, mini satıra gider).
+  const create = async (post: () => Promise<{ id: number }>) => {
+    const { id } = await post()
+    await reload()
+    return id
+  }
 
   const buildPayload = (): PatentIn => ({
     title: form.title.trim(),
@@ -151,50 +161,62 @@ export default function PatentDrawer({ mode, lookups, onClose, onSaved, onNotFou
           <textarea id="formTitle" rows={2} value={form.title} maxLength={500} disabled={busy} onChange={(e) => set('title', e.target.value)} className={`w-full p-space-sm ${controlClass}`} />
         </Field>
         <div className="grid grid-cols-1 gap-space-md md:grid-cols-2">
-          <Field id="formApplicant" text="2. Başvuru Sahibi *" error={fieldErrors.applicant_id}>
-            <select id="formApplicant" value={form.applicantId} disabled={busy} onChange={(e) => set('applicantId', e.target.value)} className={`h-10 px-space-sm ${controlClass}`}>
-              <option value="">Seçiniz</option>
-              {lookups?.applicants.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.full_name}
-                  {a.is_active ? '' : ' (pasif)'}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field id="formDepartment" text="3. Bölüm / Birim" error={fieldErrors.department_id}>
-            <select id="formDepartment" value={form.departmentId} disabled={busy} onChange={(e) => set('departmentId', e.target.value)} className={`h-10 px-space-sm ${controlClass}`}>
-              <option value="">-</option>
-              {lookups?.departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <LookupField
+            id="formApplicant"
+            text="2. Başvuru Sahibi *"
+            value={form.applicantId}
+            options={(lookups?.applicants ?? []).map((a) => ({ id: a.id, label: a.full_name + (a.is_active ? '' : ' (pasif)') }))}
+            emptyLabel="Seçiniz"
+            disabled={busy}
+            error={fieldErrors.applicant_id}
+            addedMessage="Başvuru sahibi eklendi."
+            onChange={(value) => {
+              // Bölüm boşsa seçilen kişinin varsayılan bölümü gelir; kullanıcı değiştirebilir.
+              const defaultDepartment = lookups?.applicants.find((a) => String(a.id) === value)?.department_id
+              setForm((prev) => ({ ...prev, applicantId: value, departmentId: prev.departmentId || (defaultDepartment ? String(defaultDepartment) : '') }))
+            }}
+            onCreate={(name) => create(() => createApplicant({ full_name: name }))}
+          />
+          <LookupField
+            id="formDepartment"
+            text="3. Bölüm / Birim"
+            value={form.departmentId}
+            options={(lookups?.departments ?? []).map((d) => ({ id: d.id, label: d.name }))}
+            emptyLabel="Seçiniz"
+            disabled={busy}
+            error={fieldErrors.department_id}
+            addedMessage="Bölüm eklendi."
+            onChange={(value) => set('departmentId', value)}
+            onCreate={(name) => create(() => createDepartment({ name }))}
+          />
         </div>
         <div className="grid grid-cols-1 gap-space-md md:grid-cols-2">
-          <Field id="formType" text="4. FSMH Türü *" error={fieldErrors.fsmh_type_id}>
-            <select id="formType" value={form.fsmhTypeId} disabled={busy} onChange={(e) => set('fsmhTypeId', e.target.value)} className={`h-10 px-space-sm ${controlClass}`}>
-              <option value="">Seçiniz</option>
-              {lookups?.fsmhTypes.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field id="formAgentFirm" text="5. Vekil Firma" error={fieldErrors.attorney_firm_id}>
-            <select id="formAgentFirm" value={form.attorneyFirmId} disabled={busy} onChange={(e) => set('attorneyFirmId', e.target.value)} className={`h-10 px-space-sm ${controlClass}`}>
-              <option value="">-</option>
-              {lookups?.attorneyFirms.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                  {f.is_active ? '' : ' (pasif)'}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <LookupField
+            id="formType"
+            text="4. FSMH Türü *"
+            value={form.fsmhTypeId}
+            options={(lookups?.fsmhTypes ?? []).map((t) => ({ id: t.id, label: t.name }))}
+            emptyLabel="Seçiniz"
+            disabled={busy}
+            error={fieldErrors.fsmh_type_id}
+            addedMessage="FSMH türü eklendi."
+            onChange={(value) => set('fsmhTypeId', value)}
+            onCreate={(name) =>
+              create(() => createFsmhType({ name, sort_order: Math.max(0, ...(lookups?.fsmhTypes ?? []).map((t) => t.sort_order)) + 1 }))
+            }
+          />
+          <LookupField
+            id="formAgentFirm"
+            text="5. Vekil Firma"
+            value={form.attorneyFirmId}
+            options={(lookups?.attorneyFirms ?? []).map((f) => ({ id: f.id, label: f.name + (f.is_active ? '' : ' (pasif)') }))}
+            emptyLabel="Seçiniz"
+            disabled={busy}
+            error={fieldErrors.attorney_firm_id}
+            addedMessage="Vekil firma eklendi."
+            onChange={(value) => set('attorneyFirmId', value)}
+            onCreate={(name) => create(() => createAttorneyFirm({ name }))}
+          />
         </div>
         <div className="flex flex-col gap-space-xs">
           <label htmlFor="formPartners" className={labelClass}>

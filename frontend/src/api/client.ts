@@ -24,7 +24,7 @@ export class ApiError extends Error {
   }
 }
 
-function buildUrl(path: string, query?: Query): string {
+export function buildUrl(path: string, query?: Query): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(query ?? {})) {
     if (value !== undefined && value !== null && value !== '') params.set(key, String(value))
@@ -113,4 +113,25 @@ export async function request<T>(
 
 export function isAbort(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError'
+}
+
+// Dosya indirme (xlsx): hata yanıtları JSON olarak ApiError'a çevrilir. Dosya adı Content-Disposition'dan gelir.
+export async function download(path: string, query?: Query): Promise<{ blob: Blob; filename: string | null }> {
+  let response: Response
+  try {
+    response = await fetch(buildUrl(path, query))
+  } catch {
+    throw new ApiError(0, 'Sunucuya ulaşılamadı.')
+  }
+  if (!response.ok) {
+    let data: unknown = null
+    try {
+      data = await response.json()
+    } catch {
+      data = null
+    }
+    throw toApiError(response.status, data)
+  }
+  const match = /filename="?([^";]+)"?/.exec(response.headers.get('Content-Disposition') ?? '')
+  return { blob: await response.blob(), filename: match ? match[1] : null }
 }

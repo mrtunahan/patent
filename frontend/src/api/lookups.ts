@@ -6,6 +6,7 @@ import type {
   AttorneyFirmRead,
   DepartmentIn,
   DepartmentRead,
+  FsmhTypeIn,
   FsmhTypeRead,
 } from './types'
 
@@ -29,3 +30,5 @@ export const createAttorneyFirm = (body: AttorneyFirmIn) => request<AttorneyFirm
 export const updateAttorneyFirm = (id: number, body: AttorneyFirmIn) =>
   request<AttorneyFirmRead>('PUT', `/attorney_firms/${id}`, { body })
 export const removeAttorneyFirm = (id: number) => request<void>('DELETE', `/attorney_firms/${id}`)
+
+export const createFsmhType = (body: FsmhTypeIn) => request<FsmhTypeRead>('POST', '/fsmh_types', { body })

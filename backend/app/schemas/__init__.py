@@ -11,6 +11,7 @@ from app.schemas.fsmh_type import FsmhTypeIn, FsmhTypeRead
 from app.schemas.patent import (
     ApplicantRef,
     NamedRef,
+    PatentFilterQuery,
     PatentIn,
     PatentListQuery,
     PatentListResponse,
@@ -25,6 +26,6 @@ __all__ = [
     "DuplicateWarning", "ErrorResponse",
     "FsmhTypeIn", "FsmhTypeRead",
     "NamedRef", "Page",
-    "PatentIn", "PatentListQuery", "PatentListResponse", "PatentRead",
+    "PatentFilterQuery", "PatentIn", "PatentListQuery", "PatentListResponse", "PatentRead",
     "SettingsMap", "UtcDatetime",
 ]

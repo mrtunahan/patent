@@ -109,11 +109,12 @@ export interface Lookups {
   attorneyFirms: AttorneyFirmRead[]
 }
 
+// Arayüz yalnızca ad (+ bölüm) gönderir; email / is_active düzenlemede mevcut değerleriyle geri yollanır.
 export interface ApplicantIn {
   full_name: string
-  department_id: number | null
-  email: string | null
-  is_active: boolean
+  department_id?: number | null
+  email?: string | null
+  is_active?: boolean
 }
 
 export interface DepartmentIn {
@@ -122,8 +123,11 @@ export interface DepartmentIn {
 
 export interface AttorneyFirmIn {
   name: string
-  contact_info: string | null
-  is_active: boolean
+  contact_info?: string | null
+  is_active?: boolean
 }
 
-export type Settings = Record<string, string>
+export interface FsmhTypeIn {
+  name: string
+  sort_order: number
+}

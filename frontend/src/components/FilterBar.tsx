@@ -10,14 +10,11 @@ export interface Filters {
   attorneyFirmId: string
   hasAttorney: '' | 'true' | 'false'
   dateFrom: string
-  dateTo: string
 }
 
 export const EMPTY_FILTERS: Filters = {
-  q: '', fsmhTypeId: '', applicantId: '', departmentId: '', attorneyFirmId: '', hasAttorney: '', dateFrom: '', dateTo: '',
+  q: '', fsmhTypeId: '', applicantId: '', departmentId: '', attorneyFirmId: '', hasAttorney: '', dateFrom: '',
 }
-
-export const dateRangeInvalid = (f: Filters) => !!f.dateFrom && !!f.dateTo && f.dateFrom > f.dateTo
 
 interface Props {
   filters: Filters
@@ -40,7 +37,6 @@ export default function FilterBar({ filters, lookups, total, onChange, onReset }
     return () => window.clearTimeout(timer)
   }, [qInput, filters.q, onChange])
 
-  const invalid = dateRangeInvalid(filters)
   const options = <T extends { id: number }>(items: T[] | undefined, label: (item: T) => string) =>
     (items ?? []).map((item) => (
       <option key={item.id} value={item.id}>
@@ -107,19 +103,9 @@ export default function FilterBar({ filters, lookups, total, onChange, onReset }
 
       <div className="flex flex-wrap items-end gap-space-md">
         <label className="flex flex-col gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
-          Başvuru tarihi (başlangıç)
+          Başvuru tarihinden itibaren
           <input type="date" value={filters.dateFrom} onChange={(e) => onChange({ dateFrom: e.target.value })} className="h-10 rounded-lg bg-surface-container-lowest px-space-sm font-body-md text-body-md text-on-surface focus:outline-none" />
         </label>
-        <label className="flex flex-col gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
-          Başvuru tarihi (bitiş)
-          <input type="date" value={filters.dateTo} onChange={(e) => onChange({ dateTo: e.target.value })} className="h-10 rounded-lg bg-surface-container-lowest px-space-sm font-body-md text-body-md text-on-surface focus:outline-none" />
-        </label>
-        {invalid && (
-          <span role="alert" className="flex items-center gap-space-xs pb-space-sm font-label-md text-label-md text-error">
-            <Icon name="error" className="text-[16px]" />
-            Başlangıç tarihi bitişten sonra olamaz.
-          </span>
-        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-space-sm pt-space-xs font-label-sm text-label-sm text-on-surface-variant">
