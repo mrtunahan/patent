@@ -4,7 +4,6 @@ import Applicants from './pages/Applicants'
 import AttorneyFirms from './pages/AttorneyFirms'
 import Departments from './pages/Departments'
 import NotFound from './pages/NotFound'
-import PatentForm from './pages/PatentForm'
 import PatentList from './pages/PatentList'
 import Settings from './pages/Settings'
 
@@ -12,9 +11,10 @@ export default function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
+        {/* Çekmece (yeni/düzenle) PatentList içinde açılır; adres yenilemede de çalışır. */}
         <Route index element={<PatentList />} />
-        <Route path="patents/new" element={<PatentForm />} />
-        <Route path="patents/:id" element={<PatentForm />} />
+        <Route path="patents/new" element={<PatentList />} />
+        <Route path="patents/:id" element={<PatentList />} />
         <Route path="applicants" element={<Applicants />} />
         <Route path="departments" element={<Departments />} />
         <Route path="attorney-firms" element={<AttorneyFirms />} />
