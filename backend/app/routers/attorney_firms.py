@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 
 from app.core.deps import DbSession, ItemId
-from app.schemas import ErrorResponse, AttorneyFirmIn, AttorneyFirmRead
+from app.schemas import LookupSummary, ErrorResponse, AttorneyFirmIn, AttorneyFirmRead
 from app.services import attorney_firms as service
+from app.services import summaries
 
 router = APIRouter(prefix="/attorney_firms", tags=["attorney_firms"])
 
@@ -10,6 +11,11 @@ router = APIRouter(prefix="/attorney_firms", tags=["attorney_firms"])
 @router.get("", response_model=list[AttorneyFirmRead])
 def list_attorney_firms(db: DbSession):
     return service.list_attorney_firms(db)
+
+
+@router.get("/summary", response_model=list[LookupSummary])
+def attorney_firms_summary(db: DbSession):
+    return summaries.attorney_firms_summary(db)
 
 
 @router.post("", response_model=AttorneyFirmRead, status_code=201, responses={409: {"model": ErrorResponse}})

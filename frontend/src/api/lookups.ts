@@ -8,6 +8,8 @@ import type {
   DepartmentRead,
   FsmhTypeIn,
   FsmhTypeRead,
+  LookupSummary,
+  PartnerSummary,
 } from './types'
 
 export const listApplicants = (signal?: AbortSignal) => request<ApplicantRead[]>('GET', '/applicants', { signal })
@@ -32,3 +34,10 @@ export const updateAttorneyFirm = (id: number, body: AttorneyFirmIn) =>
 export const removeAttorneyFirm = (id: number) => request<void>('DELETE', `/attorney_firms/${id}`)
 
 export const createFsmhType = (body: FsmhTypeIn) => request<FsmhTypeRead>('POST', '/fsmh_types', { body })
+
+// --- salt okunur özetler (aktif patent sayıları ve başlıkları) ---
+
+export const listPartners = (signal?: AbortSignal) => request<PartnerSummary[]>('GET', '/partners', { signal })
+export const listDepartmentSummary = (signal?: AbortSignal) => request<LookupSummary[]>('GET', '/departments/summary', { signal })
+export const listAttorneyFirmSummary = (signal?: AbortSignal) =>
+  request<LookupSummary[]>('GET', '/attorney_firms/summary', { signal })

@@ -52,7 +52,7 @@ def test_seeded_types_listed_in_order_via_migration(tmp_path):
         command.upgrade(cfg, "head")  # create_all değil: Alembic seed'i
     listed = build_client(engine).get(URL).json()
     assert [(t["name"], t["sort_order"]) for t in listed] == [
-        ("Patent", 1), ("Faydalı Model", 2), ("Tasarım Tescili", 3), ("Marka", 4),
+        ("Patent", 1), ("Faydalı Model", 2), ("Tasarım Tescili", 3), ("Marka", 4), ("Telif Hakkı", 5),
     ]
     engine.dispose()
 

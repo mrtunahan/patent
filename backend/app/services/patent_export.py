@@ -20,6 +20,8 @@ COLUMNS = [
     ("Vekil Firma", 24),
     ("Ortaklar & Oranları", 36),
     ("Başvuru Tarihi", 16),
+    ("Tescil Tarihi", 16),
+    ("Durum", 20),
     ("Notlar / Açıklama", 50),
 ]
 _FORMULA_PREFIXES = ("=", "+", "-", "@")
@@ -59,10 +61,12 @@ def build_workbook(db: Session, query: PatentFilterQuery) -> bytes:
         ]
         for offset, text in enumerate(texts, 2):
             _set_text(ws.cell(row=row, column=offset), text)
-        date_cell = ws.cell(row=row, column=8, value=patent.application_date)
-        date_cell.number_format = "DD.MM.YYYY"
-        date_cell.alignment = Alignment(horizontal="left", vertical="top")
-        _set_text(ws.cell(row=row, column=9), patent.notes)
+        for column, value in ((8, patent.application_date), (9, patent.registration_date)):
+            date_cell = ws.cell(row=row, column=column, value=value)
+            date_cell.number_format = "DD.MM.YYYY"
+            date_cell.alignment = Alignment(horizontal="left", vertical="top")
+        _set_text(ws.cell(row=row, column=10), patent.status)
+        _set_text(ws.cell(row=row, column=11), patent.notes)
 
     buffer = BytesIO()
     wb.save(buffer)

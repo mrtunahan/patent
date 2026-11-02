@@ -24,7 +24,23 @@ export function fsmhTypeStyle(name: string): { pill: string; dot: string } {
       return { pill: 'bg-secondary-fixed text-on-secondary-fixed', dot: 'bg-secondary' }
     case 'tasarım tescili':
       return { pill: 'bg-tertiary-fixed text-on-tertiary-fixed', dot: 'bg-tertiary' }
+    case 'telif hakkı':
+      return { pill: 'bg-primary-container text-on-primary-container', dot: 'bg-primary' }
     default:
       return { pill: 'bg-surface-container-highest text-on-surface', dot: 'bg-outline' }
+  }
+}
+
+// Patent durumu hap renkleri.
+export function statusStyle(status: string): string {
+  switch (status) {
+    case 'Tescillendi':
+      return 'bg-primary-fixed text-on-primary-fixed'
+    case 'Süreç Devam Ediyor':
+      return 'bg-secondary-fixed text-on-secondary-fixed'
+    case 'Reddedildi':
+      return 'bg-error-container text-on-error-container'
+    default:
+      return 'bg-surface-container-highest text-on-surface'
   }
 }

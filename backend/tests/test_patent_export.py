@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 from app.models import Applicant, Department, FsmhType, PatentPartner
 
 HEADERS = ["No", "Buluş Başlığı", "Başvuru Sahibi", "Bölüm / Birim", "FSMH Türü", "Vekil Firma",
-           "Ortaklar & Oranları", "Başvuru Tarihi", "Notlar / Açıklama"]
+           "Ortaklar & Oranları", "Başvuru Tarihi", "Tescil Tarihi", "Durum", "Notlar / Açıklama"]
 
 
 def add(db, make_patent, title, notes=None, **links):
@@ -28,7 +28,7 @@ def test_export_headers_order_dates_and_attachment_name(client, db, make_patent)
     dept = Department(name="Gıda")
     db.add(dept)
     db.flush()
-    mk("İkinci", "not", department_id=dept.id, application_date=date(2024, 3, 5))
+    mk("İkinci", "not", department_id=dept.id, application_date=date(2024, 3, 5), registration_date=date(2025, 1, 2), status="Tescillendi")
     p = mk("Birinci")
     p.partners = [PatentPartner(partner_name="A Üni."), PatentPartner(partner_name="B Üni.")]
     db.commit()
@@ -37,7 +37,8 @@ def test_export_headers_order_dates_and_attachment_name(client, db, make_patent)
     assert data[0] == HEADERS
     assert [row[:2] for row in data[1:]] == [[1, "Birinci"], [2, "İkinci"]]  # Türkçe sıralama, No 1'den
     assert data[1][6] == "A Üni., B Üni." and data[1][7] is None
-    assert data[2][3] == "Gıda" and data[2][7].date() == date(2024, 3, 5) and data[2][8] == "not"
+    assert data[2][3] == "Gıda" and data[2][7].date() == date(2024, 3, 5) and data[2][10] == "not"
+    assert data[2][8].date() == date(2025, 1, 2) and data[2][9] == "Tescillendi" and data[1][8] is None  # yeni sütunlar
     ws = load_workbook(BytesIO(client.get("/api/patents/export").content)).active
     assert ws.freeze_panes == "A2" and ws["A1"].font.bold and ws["H3"].number_format == "DD.MM.YYYY"
 
@@ -64,6 +65,6 @@ def test_export_never_writes_formulas(client, db, make_patent):
     add(db, make_patent, "-5+x", "+cmd")
     r = client.get("/api/patents/export")
     ws = load_workbook(BytesIO(r.content)).active
-    for ref in ("B2", "I2", "B3", "I3"):
+    for ref in ("B2", "K2", "B3", "K3"):
         assert ws[ref].data_type == "s", ref
-    assert ws["B2"].value == "=1+1" and ws["I2"].value == "@SUM(A1)"
+    assert ws["B2"].value == "=1+1" and ws["K2"].value == "@SUM(A1)"

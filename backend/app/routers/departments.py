@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 
 from app.core.deps import DbSession, ItemId
-from app.schemas import DepartmentIn, DepartmentRead, ErrorResponse
+from app.schemas import LookupSummary, DepartmentIn, DepartmentRead, ErrorResponse
 from app.services import departments as service
+from app.services import summaries
 
 router = APIRouter(prefix="/departments", tags=["departments"])
 
@@ -10,6 +11,11 @@ router = APIRouter(prefix="/departments", tags=["departments"])
 @router.get("", response_model=list[DepartmentRead])
 def list_departments(db: DbSession):
     return service.list_departments(db)
+
+
+@router.get("/summary", response_model=list[LookupSummary])
+def departments_summary(db: DbSession):
+    return summaries.departments_summary(db)
 
 
 @router.post("", response_model=DepartmentRead, status_code=201, responses={409: {"model": ErrorResponse}})

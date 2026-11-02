@@ -66,13 +66,14 @@ EXPECTED = {
         "id": False, "name": False, "sort_order": False, "created_at": False, "updated_at": False,
     },
     "attorney_firms": {
-        "id": False, "name": False, "contact_info": True, "is_active": False,
+        "id": False, "name": False, "contact_info": True, "tax_no": True, "title": True, "email": True,
+        "is_active": False,
         "created_at": False, "updated_at": False,
     },
     "patents": {
         "id": False, "title": False, "applicant_id": False, "department_id": True,
         "fsmh_type_id": False, "attorney_firm_id": True, "application_date": True,
-        "notes": True, "deleted_at": True, "created_at": False, "updated_at": False,
+        "registration_date": True, "status": True, "notes": True, "deleted_at": True, "created_at": False, "updated_at": False,
     },
     "patent_partners": {"id": False, "patent_id": False, "partner_name": False},
     "settings": {"key": False, "value": False},

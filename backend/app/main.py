@@ -9,7 +9,7 @@ from app.core.errors import ConflictError, DuplicateWarningError, NotFoundError,
 from app.core.root_path import RootPathMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
 from app.core.spa import mount_spa
-from app.routers import applicants, attorney_firms, departments, fsmh_types, patents
+from app.routers import applicants, attorney_firms, departments, fsmh_types, partners, patents
 from app.routers import settings as settings_router
 
 DIST_DIR = PROJECT_ROOT / "frontend" / "dist"
@@ -38,7 +38,7 @@ def create_app(settings_obj: Settings | None = None, dist_dir: Path | None = Non
     def health():
         return {"status": "ok"}
 
-    for module in (patents, applicants, departments, fsmh_types, attorney_firms, settings_router):
+    for module in (patents, applicants, departments, fsmh_types, attorney_firms, partners, settings_router):
         app.include_router(module.router, prefix="/api")
 
     # Statik servis ve SPA fallback router'lardan sonra kaydedilir (/api gölgelenmesin).

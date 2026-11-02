@@ -16,6 +16,10 @@ from app.schemas.common import (
 )
 
 
+PatentStatus = Literal["Tescillendi", "Süreç Devam Ediyor", "Reddedildi"]
+StatusField = Annotated[PatentStatus | None, BeforeValidator(strip_or_none)]  # boş string -> None
+
+
 class PatentIn(InSchema):
     title: RequiredStr500
     applicant_id: ForeignId
@@ -23,6 +27,8 @@ class PatentIn(InSchema):
     department_id: ForeignId | None = None
     attorney_firm_id: ForeignId | None = None
     application_date: date | None = None  # boş ve gelecek tarih geçerli (Madde 6/3)
+    registration_date: date | None = None
+    status: StatusField = None
     notes: OptionalText = None
     # Normalize edilmiş tekrar kontrolü servis katmanında yapılacak.
     partners: list[RequiredStr200] = Field(default_factory=list)
@@ -54,6 +60,8 @@ class PatentRead(ReadSchema):
     attorney_firm: NamedRef | None
     partners: Annotated[list[str], BeforeValidator(_partner_names)]
     application_date: date | None
+    registration_date: date | None
+    status: str | None
     notes: str | None
     created_at: UtcDatetime
     updated_at: UtcDatetime

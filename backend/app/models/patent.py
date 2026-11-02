@@ -31,6 +31,8 @@ class Patent(Base):
         ForeignKey("attorney_firms.id"), nullable=True
     )
     application_date: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
+    registration_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    status: Mapped[str | None] = mapped_column(String(30), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)

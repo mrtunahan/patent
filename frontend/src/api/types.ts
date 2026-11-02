@@ -10,6 +10,9 @@ export interface ApplicantRef {
   full_name: string
 }
 
+export type PatentStatus = 'Tescillendi' | 'Süreç Devam Ediyor' | 'Reddedildi'
+export const PATENT_STATUSES: PatentStatus[] = ['Tescillendi', 'Süreç Devam Ediyor', 'Reddedildi']
+
 export interface PatentRead {
   id: number
   title: string
@@ -19,6 +22,8 @@ export interface PatentRead {
   attorney_firm: IdName | null
   partners: string[]
   application_date: string | null // ISO YYYY-MM-DD
+  registration_date: string | null
+  status: PatentStatus | null
   notes: string | null
   created_at: string
   updated_at: string
@@ -31,6 +36,8 @@ export interface PatentIn {
   department_id: number | null
   attorney_firm_id: number | null
   application_date: string | null
+  registration_date: string | null
+  status: PatentStatus | null
   notes: string | null
   partners: string[]
 }
@@ -71,6 +78,9 @@ export interface AttorneyFirmRead {
   id: number
   name: string
   contact_info: string | null
+  tax_no: string | null
+  title: string | null
+  email: string | null
   is_active: boolean
   created_at: string
   updated_at: string
@@ -124,10 +134,29 @@ export interface DepartmentIn {
 export interface AttorneyFirmIn {
   name: string
   contact_info?: string | null
+  tax_no?: string | null
+  title?: string | null
+  email?: string | null
   is_active?: boolean
 }
 
 export interface FsmhTypeIn {
   name: string
   sort_order: number
+}
+
+export interface PatentRef {
+  id: number
+  title: string
+}
+
+export interface PartnerSummary {
+  name: string
+  patent_count: number
+  patents: PatentRef[]
+}
+
+export interface LookupSummary extends IdName {
+  patent_count: number
+  patents: PatentRef[]
 }

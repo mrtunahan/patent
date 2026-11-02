@@ -11,7 +11,7 @@ def test_crud_happy_path(client):
     r = post(client, "Destek Patent", contact_info="  0312 000 00 00 ")
     assert r.status_code == 201
     body = r.json()
-    assert set(body) == {"id", "name", "contact_info", "is_active", "created_at", "updated_at"}
+    assert set(body) == {"id", "name", "contact_info", "tax_no", "title", "email", "is_active", "created_at", "updated_at"}
     assert body["contact_info"] == "0312 000 00 00"
     firm_id = body["id"]
     assert client.get(f"{URL}/{firm_id}").json()["name"] == "Destek Patent"
@@ -66,3 +66,21 @@ def test_delete_with_active_linked_patent_is_409(client, make_patent):
     r = client.delete(f"{URL}/{firm['id']}")
     assert r.status_code == 409 and r.json() == {"detail": "Bu kayıt 1 aktif patentte kullanılıyor, silinemez."}
     assert client.get(f"{URL}/{firm['id']}").status_code == 200
+
+
+def test_new_fields_trimmed_empty_to_none_and_validated(client):
+    r = post(client, "Yeni", tax_no=" 1234567890 ", title="  Yeni Patent Ltd.  ", email=" info@yeni.com.tr ")
+    assert r.status_code == 201
+    assert (r.json()["tax_no"], r.json()["title"], r.json()["email"]) == ("1234567890", "Yeni Patent Ltd.", "info@yeni.com.tr")
+    r = post(client, "Boş", tax_no="  ", title="", email=" ")
+    assert (r.json()["tax_no"], r.json()["title"], r.json()["email"]) == (None, None, None)
+    assert post(client, "Onbir", tax_no="12345678901").status_code == 201
+    for bad in ("123456789", "123456789012", "12345abc90", "١٢٣٤٥٦٧٨٩٠"):  # kısa, uzun, harf, Arap-Hint rakamı
+        r = post(client, f"V{bad}", tax_no=bad)
+        assert r.status_code == 422 and r.json() == {"detail": "Vergi no 10 veya 11 haneli rakam olmalı."}, bad
+    for bad in ("a", "a@b", "a@@b.com", "@b.com", "a@b.", "a@.com", "a b@c.com"):
+        r = post(client, f"E{bad}", email=bad)
+        assert r.status_code == 422 and r.json() == {"detail": "Geçerli bir e-posta adresi girin."}, bad
+    other = client.get(URL).json()[0]
+    r = client.put(f"{URL}/{other['id']}", json={"name": other["name"], "tax_no": "abc"})
+    assert r.status_code == 422  # PUT'ta da doğrulanır

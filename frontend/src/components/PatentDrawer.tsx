@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ApiError } from '../api/client'
 import { createPatent, getPatent, removePatent, updatePatent } from '../api/patents'
 import { createApplicant, createAttorneyFirm, createDepartment, createFsmhType } from '../api/lookups'
-import type { PatentIn } from '../api/types'
+import { PATENT_STATUSES, type PatentIn, type PatentStatus } from '../api/types'
 import { useLookups } from '../lib/lookups'
 import ConfirmDialog from './ConfirmDialog'
 import DrawerShell from './DrawerShell'
@@ -25,12 +25,17 @@ interface FormState {
   attorneyFirmId: string
   partners: string[]
   applicationDate: string
+  registrationDate: string
+  status: string
   notes: string
 }
 
 const EMPTY: FormState = {
-  title: '', applicantId: '', departmentId: '', fsmhTypeId: '', attorneyFirmId: '', partners: [], applicationDate: '', notes: '',
+  title: '', applicantId: '', departmentId: '', fsmhTypeId: '', attorneyFirmId: '', partners: [], applicationDate: '', registrationDate: '', status: '', notes: '',
 }
+
+// Tarih kutusu yıl yazılırken ara değerler üretir; yalnızca tam ve makul tarih (YYYY-MM-DD, >= 1900) gönderilir.
+const fullDate = (value: string) => (/^\d{4}-\d{2}-\d{2}$/.test(value) && value >= '1900-01-01' ? value : null)
 
 export default function PatentDrawer({ mode, onClose, onSaved, onNotFound }: Props) {
   const isNew = mode === 'new'
@@ -60,6 +65,8 @@ export default function PatentDrawer({ mode, onClose, onSaved, onNotFound }: Pro
           attorneyFirmId: patent.attorney_firm ? String(patent.attorney_firm.id) : '',
           partners: patent.partners,
           applicationDate: patent.application_date ?? '',
+          registrationDate: patent.registration_date ?? '',
+          status: patent.status ?? '',
           notes: patent.notes ?? '',
         })
         setLoading(false)
@@ -89,7 +96,9 @@ export default function PatentDrawer({ mode, onClose, onSaved, onNotFound }: Pro
     fsmh_type_id: Number(form.fsmhTypeId),
     department_id: form.departmentId ? Number(form.departmentId) : null,
     attorney_firm_id: form.attorneyFirmId ? Number(form.attorneyFirmId) : null,
-    application_date: form.applicationDate || null,
+    application_date: fullDate(form.applicationDate),
+    registration_date: fullDate(form.registrationDate),
+    status: (form.status || null) as PatentStatus | null,
     notes: form.notes.trim() || null,
     partners: form.partners,
   })
@@ -224,10 +233,25 @@ export default function PatentDrawer({ mode, onClose, onSaved, onNotFound }: Pro
           </label>
           <PartnerInput value={form.partners} onChange={(v) => set('partners', v)} disabled={busy} error={fieldErrors.partners} />
         </div>
-        <Field id="formApplicationDate" text="7. Başvuru Tarihi" error={fieldErrors.application_date}>
-          <input id="formApplicationDate" type="date" value={form.applicationDate} disabled={busy} onChange={(e) => set('applicationDate', e.target.value)} className={`h-10 px-space-sm md:max-w-xs ${controlClass}`} />
+        <div className="grid grid-cols-1 gap-space-md md:grid-cols-2">
+          <Field id="formApplicationDate" text="7. Başvuru Tarihi" error={fieldErrors.application_date}>
+            <input id="formApplicationDate" type="date" value={form.applicationDate} disabled={busy} onChange={(e) => set('applicationDate', e.target.value)} className={`h-10 px-space-sm ${controlClass}`} />
+          </Field>
+          <Field id="formRegistrationDate" text="Tescil Tarihi" error={fieldErrors.registration_date}>
+            <input id="formRegistrationDate" type="date" value={form.registrationDate} disabled={busy} onChange={(e) => set('registrationDate', e.target.value)} className={`h-10 px-space-sm ${controlClass}`} />
+          </Field>
+        </div>
+        <Field id="formStatus" text="8. Durum" error={fieldErrors.status}>
+          <select id="formStatus" value={form.status} disabled={busy} onChange={(e) => set('status', e.target.value)} className={`h-10 px-space-sm md:max-w-xs ${controlClass}`}>
+            <option value="">Seçiniz</option>
+            {PATENT_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
         </Field>
-        <Field id="formNotes" text="8. Notlar / Açıklama" error={fieldErrors.notes}>
+        <Field id="formNotes" text="9. Notlar / Açıklama" error={fieldErrors.notes}>
           <textarea id="formNotes" rows={3} value={form.notes} disabled={busy} onChange={(e) => set('notes', e.target.value)} className={`w-full p-space-sm ${controlClass}`} />
         </Field>
       </DrawerShell>

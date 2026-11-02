@@ -56,7 +56,13 @@ def _check_duplicate(db: Session, data: PatentIn, exclude_id: int | None = None)
         raise DuplicateWarningError(DUPLICATE_MESSAGE, ids)
 
 
+def _check_dates(data: PatentIn) -> None:
+    if data.registration_date and data.application_date and data.registration_date < data.application_date:
+        raise UnprocessableError("Tescil tarihi başvuru tarihinden önce olamaz.")
+
+
 def _validate(db: Session, data: PatentIn, confirm_duplicate: bool, exclude_id: int | None = None) -> None:
+    _check_dates(data)
     _check_references(db, data)
     _check_partners(data)
     if not confirm_duplicate:
@@ -72,6 +78,8 @@ def create_patent(db: Session, data: PatentIn, confirm_duplicate: bool = False) 
         fsmh_type_id=data.fsmh_type_id,
         attorney_firm_id=data.attorney_firm_id,
         application_date=data.application_date,
+        registration_date=data.registration_date,
+        status=data.status,
         notes=data.notes,
         partners=[PatentPartner(partner_name=name) for name in data.partners],
     )
@@ -90,6 +98,8 @@ def update_patent(db: Session, patent_id: int, data: PatentIn, confirm_duplicate
     patent.fsmh_type_id = data.fsmh_type_id
     patent.attorney_firm_id = data.attorney_firm_id
     patent.application_date = data.application_date
+    patent.registration_date = data.registration_date
+    patent.status = data.status
     patent.notes = data.notes
     patent.partners = [PatentPartner(partner_name=name) for name in data.partners]  # bütünüyle değişir
     patent.updated_at = utc_now()  # yalnızca ortaklar değişse de ilerlesin

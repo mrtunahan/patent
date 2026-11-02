@@ -9,6 +9,7 @@ const menu = [
   { to: '/applicants', label: 'Başvuru Sahipleri', icon: 'person' },
   { to: '/departments', label: 'Bölümler', icon: 'domain' },
   { to: '/attorney-firms', label: 'Vekil Firmalar', icon: 'business_center' },
+  { to: '/partners', label: 'Ortaklar', icon: 'handshake' },
 ]
 
 export default function AppShell() {

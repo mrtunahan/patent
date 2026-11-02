@@ -48,7 +48,7 @@ def test_upgrade_head_creates_tables(engine):
     upgrade(engine)
     assert tables(engine) == TABLES | {"alembic_version"}
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0001"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0002"
         assert conn.execute(text("PRAGMA journal_mode")).scalar() == "wal"
         assert conn.execute(text("PRAGMA foreign_keys")).scalar() == 1
 
@@ -60,7 +60,7 @@ def test_fsmh_seed(engine):
             text("SELECT name, sort_order, created_at, updated_at FROM fsmh_types ORDER BY sort_order")
         ).all()
     assert [(r[0], r[1]) for r in rows] == [
-        ("Patent", 1), ("Faydalı Model", 2), ("Tasarım Tescili", 3), ("Marka", 4),
+        ("Patent", 1), ("Faydalı Model", 2), ("Tasarım Tescili", 3), ("Marka", 4), ("Telif Hakkı", 5),
     ]
     assert all(r[2] and r[3] for r in rows)
 
@@ -104,14 +104,14 @@ def test_downgrade_then_upgrade_again(engine):
     upgrade(engine)
     assert tables(engine) == TABLES | {"alembic_version"}
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT COUNT(*) FROM fsmh_types")).scalar() == 4
+        assert conn.execute(text("SELECT COUNT(*) FROM fsmh_types")).scalar() == 5
 
 
 def test_upgrade_twice_is_noop(engine):
     upgrade(engine)
     upgrade(engine)
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT COUNT(*) FROM fsmh_types")).scalar() == 4
+        assert conn.execute(text("SELECT COUNT(*) FROM fsmh_types")).scalar() == 5
         assert conn.execute(text("SELECT COUNT(*) FROM alembic_version")).scalar() == 1
     assert tables(engine) == TABLES | {"alembic_version"}
 
@@ -128,3 +128,28 @@ def test_env_uses_db_path_regardless_of_cwd(tmp_path, monkeypatch):
         assert tables(eng) == TABLES | {"alembic_version"}
     finally:
         eng.dispose()
+
+
+def test_0002_is_idempotent_when_type_exists_with_different_spelling(engine):
+    with engine.begin() as conn:
+        command.upgrade(make_cfg(conn), "0001")
+        conn.execute(text("INSERT INTO fsmh_types (name, sort_order, created_at, updated_at) VALUES ('TELİF  hakkı', 9, '2026-01-01', '2026-01-01')"))
+    upgrade(engine)
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT COUNT(*) FROM fsmh_types")).scalar() == 5  # 4 seed + var olan; ikincisi eklenmedi
+
+
+def test_0002_downgrade_drops_columns_keeps_data_and_linked_type(engine):
+    upgrade(engine)
+    with engine.begin() as conn:
+        conn.execute(text("INSERT INTO applicants (full_name, is_active, created_at, updated_at) VALUES ('A', 1, '2026-01-01', '2026-01-01')"))
+        conn.execute(text("INSERT INTO patents (title, applicant_id, fsmh_type_id, status, created_at, updated_at) VALUES ('T', 1, 5, 'Reddedildi', '2026-01-01', '2026-01-01')"))
+        conn.execute(text("INSERT INTO patent_partners (patent_id, partner_name) VALUES (1, 'Ortak')"))
+        command.downgrade(make_cfg(conn), "0001")
+    insp = inspect(engine)
+    assert not {"status", "registration_date"} & {c["name"] for c in insp.get_columns("patents")}
+    assert not {"tax_no", "title", "email"} & {c["name"] for c in insp.get_columns("attorney_firms")}
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT COUNT(*) FROM patents")).scalar() == 1
+        assert conn.execute(text("SELECT COUNT(*) FROM patent_partners")).scalar() == 1  # CASCADE ile silinmedi
+        assert conn.execute(text("SELECT COUNT(*) FROM fsmh_types WHERE name = 'Telif Hakkı'")).scalar() == 1  # bağlı tür kalır

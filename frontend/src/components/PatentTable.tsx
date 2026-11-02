@@ -1,5 +1,5 @@
 import type { PatentRead, SortDir, SortField } from '../api/types'
-import { formatDate, fsmhTypeStyle } from '../lib/format'
+import { formatDate, fsmhTypeStyle, statusStyle } from '../lib/format'
 import Icon from './Icon'
 
 interface Props {
@@ -41,7 +41,7 @@ export default function PatentTable({
   const ariaSort = (field: SortField) => (sortBy === field ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none')
   const message = (text: string, action?: React.ReactNode) => (
     <tr>
-      <td colSpan={10} className="bg-surface-container-lowest px-space-md py-space-xl text-on-surface-variant">
+      <td colSpan={12} className="bg-surface-container-lowest px-space-md py-space-xl text-on-surface-variant">
         <div className="sticky left-space-md inline-flex flex-wrap items-center gap-space-sm">
           <span>{text}</span>
           {action}
@@ -52,7 +52,7 @@ export default function PatentTable({
 
   return (
     <div className="w-full overflow-x-auto">
-      <table className="w-full min-w-[1500px] border-collapse text-left">
+      <table className="w-full min-w-[1750px] border-collapse text-left">
         <thead>
           <tr className="select-none bg-surface-container-highest font-label-sm text-label-sm uppercase tracking-wider text-on-surface">
             <th className={`${th} w-[70px]`}>No</th>
@@ -75,6 +75,8 @@ export default function PatentTable({
             <th aria-sort={ariaSort('application_date')} className={`${th} w-[150px]`}>
               <SortHeader label="Başvuru Tarihi" field="application_date" {...sortProps} />
             </th>
+            <th className={`${th} w-[150px]`}>Tescil Tarihi</th>
+            <th className={`${th} w-[170px]`}>Durum</th>
             <th className={`${th} w-[230px]`}>Notlar / Açıklama</th>
             <th className={`${th} sticky right-0 z-20 w-[110px] bg-surface-container-highest text-center`}>İşlemler</th>
           </tr>
@@ -127,6 +129,14 @@ export default function PatentTable({
                     )}
                   </td>
                   <td className="px-space-md py-space-md font-label-md text-label-md text-on-surface">{formatDate(patent.application_date)}</td>
+                  <td className="px-space-md py-space-md font-label-md text-label-md text-on-surface">{formatDate(patent.registration_date)}</td>
+                  <td className="px-space-md py-space-md">
+                    {patent.status ? (
+                      <span className={`inline-flex whitespace-nowrap rounded-full px-space-sm py-1 font-label-sm text-label-sm font-semibold ${statusStyle(patent.status)}`}>{patent.status}</span>
+                    ) : (
+                      dash
+                    )}
+                  </td>
                   <td className="max-w-xs truncate px-space-md py-space-md font-body-sm text-body-sm text-on-surface-variant" title={patent.notes ?? undefined}>
                     {patent.notes || dash}
                   </td>

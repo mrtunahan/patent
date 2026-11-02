@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { Status } from '../lib/hooks'
 import Icon from './Icon'
 
-export function PageHeader({ crumb, title, subtitle, addLabel, onAdd }: { crumb: string; title: string; subtitle: string; addLabel: string; onAdd: () => void }) {
+export function PageHeader({ crumb, title, subtitle, addLabel, onAdd }: { crumb: string; title: string; subtitle: string; addLabel?: string; onAdd?: () => void }) {
   return (
     <div className="flex flex-col justify-between gap-space-md lg:flex-row lg:items-center">
       <div className="flex flex-col">
@@ -14,14 +14,16 @@ export function PageHeader({ crumb, title, subtitle, addLabel, onAdd }: { crumb:
         <h1 className="mt-space-xs font-headline-lg text-headline-lg tracking-tight text-on-surface">{title}</h1>
         <p className="font-body-md text-body-md text-on-surface-variant">{subtitle}</p>
       </div>
-      <button
-        type="button"
-        onClick={onAdd}
-        className="flex h-10 items-center justify-center gap-space-xs self-start rounded-lg bg-primary px-space-lg font-label-lg text-label-lg text-on-primary shadow-md transition-all hover:bg-primary/95 lg:self-auto"
-      >
-        <Icon name="add_circle" className="text-[20px]" />
-        {addLabel}
-      </button>
+      {addLabel && onAdd && (
+        <button
+          type="button"
+          onClick={onAdd}
+          className="flex h-10 items-center justify-center gap-space-xs self-start rounded-lg bg-primary px-space-lg font-label-lg text-label-lg text-on-primary shadow-md transition-all hover:bg-primary/95 lg:self-auto"
+        >
+          <Icon name="add_circle" className="text-[20px]" />
+          {addLabel}
+        </button>
+      )}
     </div>
   )
 }
@@ -147,5 +149,44 @@ export function StatusPill({ active }: { active: boolean }) {
       <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-primary' : 'bg-outline'}`} />
       {active ? 'Aktif' : 'Pasif'}
     </span>
+  )
+}
+
+// Patent sayısı düğmesi: tıklayınca satırın altında patent başlıkları açılır / kapanır (satır tıklamasını tetiklemez).
+export function CountToggle({ count, open, onToggle }: { count: number; open: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      disabled={count === 0}
+      aria-expanded={open}
+      title={count === 0 ? undefined : open ? 'Patentleri gizle' : 'Patentleri göster'}
+      onClick={(event) => {
+        event.stopPropagation()
+        onToggle()
+      }}
+      className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-full bg-secondary-container px-space-sm py-1 font-label-md text-label-md font-semibold text-on-secondary-container transition-colors enabled:hover:bg-surface-container-high disabled:bg-surface-container-highest disabled:text-on-surface-variant"
+    >
+      {count}
+      {count > 0 && <Icon name={open ? 'expand_less' : 'expand_more'} className="text-[16px]" />}
+    </button>
+  )
+}
+
+// Açılan satır: patent başlıkları; başlığa tıklayınca /patents/{id} (liste sayfası + düzenleme çekmecesi).
+export function PatentsRow({ colSpan, patents, onOpen }: { colSpan: number; patents: { id: number; title: string }[]; onOpen: (id: number) => void }) {
+  return (
+    <tr className="bg-surface-container-low">
+      <td colSpan={colSpan} className="px-space-md py-space-sm">
+        <ul className="flex flex-col gap-1">
+          {patents.map((patent) => (
+            <li key={patent.id}>
+              <button type="button" onClick={() => onOpen(patent.id)} className="text-left font-body-md text-body-md text-primary hover:underline">
+                {patent.title}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </td>
+    </tr>
   )
 }
