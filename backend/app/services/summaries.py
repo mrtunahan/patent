@@ -4,12 +4,22 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.text import normalize_tr, turkish_sort_key
-from app.models import Applicant, AttorneyFirm, Department, Patent, PatentPartner
+from app.models import Applicant, AttorneyFirm, Department, FsmhType, Patent, PatentPartner
 from app.schemas import ApplicantSummary, LookupSummary, PartnerSummary, PatentRef
 
 
-def _refs(patents: list[tuple[int, str]]) -> list[PatentRef]:
-    return [PatentRef(id=pid, title=title) for pid, title in sorted(patents)]
+# Özet pencerelerinin ihtiyacı olan patent alanları (tür adı join ile gelir, N+1 yok).
+_REF_COLUMNS = (Patent.id, Patent.title, FsmhType.name, Patent.status, Patent.application_date, Patent.registration_date)
+
+
+def _refs(patents: list[tuple]) -> list[PatentRef]:
+    return [
+        PatentRef(
+            id=pid, title=title, fsmh_type_name=type_name, status=status,
+            application_date=application_date, registration_date=registration_date,
+        )
+        for pid, title, type_name, status, application_date, registration_date in sorted(patents, key=lambda r: r[0])
+    ]
 
 
 def partners_summary(db: Session) -> list[PartnerSummary]:
@@ -18,19 +28,20 @@ def partners_summary(db: Session) -> list[PartnerSummary]:
     Görünen ad, grubun en küçük id'li kaydındaki yazımdır.
     """
     rows = db.execute(
-        select(PatentPartner.partner_name, Patent.id, Patent.title)
+        select(PatentPartner.partner_name, *_REF_COLUMNS)
         .join(Patent, Patent.id == PatentPartner.patent_id)
+        .join(FsmhType, FsmhType.id == Patent.fsmh_type_id)
         .where(Patent.deleted_at.is_(None))
         .order_by(PatentPartner.id)
     ).all()
     display: dict[str, str] = {}
-    patents: dict[str, dict[int, str]] = defaultdict(dict)
-    for name, patent_id, title in rows:
+    patents: dict[str, dict[int, tuple]] = defaultdict(dict)
+    for name, *ref in rows:
         key = normalize_tr(name)
         display.setdefault(key, name)
-        patents[key][patent_id] = title
+        patents[key][ref[0]] = tuple(ref)
     result = [
-        PartnerSummary(name=display[key], patent_count=len(items), patents=_refs(list(items.items())))
+        PartnerSummary(name=display[key], patent_count=len(items), patents=_refs(list(items.values())))
         for key, items in patents.items()
     ]
     return sorted(result, key=lambda p: turkish_sort_key(p.name))
@@ -38,11 +49,13 @@ def partners_summary(db: Session) -> list[PartnerSummary]:
 
 def _lookup_summary(db: Session, model, column, name_attr: str = "name") -> list[LookupSummary]:
     """Tüm kayıtlar (0 patentli dahil); sayım yalnızca aktif patentler üzerinden."""
-    linked: dict[int, list[tuple[int, str]]] = defaultdict(list)
-    for owner_id, patent_id, title in db.execute(
-        select(column, Patent.id, Patent.title).where(Patent.deleted_at.is_(None), column.is_not(None))
+    linked: dict[int, list[tuple]] = defaultdict(list)
+    for owner_id, *ref in db.execute(
+        select(column, *_REF_COLUMNS)
+        .join(FsmhType, FsmhType.id == Patent.fsmh_type_id)
+        .where(Patent.deleted_at.is_(None), column.is_not(None))
     ):
-        linked[owner_id].append((patent_id, title))
+        linked[owner_id].append(tuple(ref))
     result = [
         LookupSummary(id=r.id, name=getattr(r, name_attr), patent_count=len(linked[r.id]), patents=_refs(linked[r.id]))
         for r in db.scalars(select(model))

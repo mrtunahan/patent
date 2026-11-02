@@ -258,7 +258,7 @@ export default function PatentDrawer({ mode, onClose, onSaved, onNotFound }: Pro
                   disabled={busy}
                   onClick={() => set('status', selected ? '' : status)} // seçiliye tekrar tıklamak seçimi kaldırır
                   className={`h-10 rounded-lg border px-space-md font-label-lg text-label-lg font-semibold transition-colors disabled:opacity-60 ${
-                    selected ? `border-transparent ${statusStyle(status)}` : 'border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-bright'
+                    selected ? `border-transparent ${statusStyle(status)}` : 'border-on-surface/80 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-bright'
                   }`}
                 >
                   {status}

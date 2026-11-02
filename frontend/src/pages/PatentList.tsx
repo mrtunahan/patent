@@ -15,8 +15,6 @@ import { view } from '../lib/listView'
 import { useLookups } from '../lib/lookups'
 
 const toNumber = (value: string) => (value ? Number(value) : undefined)
-// Tarih kutusu yıl yazılırken ara değerler (0002-..., 20260-...) üretir; yalnızca tam ve makul tarih sorguya girer.
-const validDate = (value: string) => (/^\d{4}-\d{2}-\d{2}$/.test(value) && value >= '1900-01-01' ? value : undefined)
 
 export default function PatentList() {
   const navigate = useNavigate()
@@ -49,9 +47,6 @@ export default function PatentList() {
     applicant_id: toNumber(filters.applicantId),
     department_id: toNumber(filters.departmentId),
     fsmh_type_id: toNumber(filters.fsmhTypeId),
-    attorney_firm_id: toNumber(filters.attorneyFirmId),
-    has_attorney: filters.hasAttorney ? filters.hasAttorney === 'true' : undefined,
-    date_from: validDate(filters.dateFrom),
     sort_by: sortBy,
     sort_dir: sortDir,
   })
@@ -200,17 +195,11 @@ export default function PatentList() {
       <FilterBar filters={filters} lookups={lookups} total={data?.total ?? null} onChange={updateFilters} onReset={resetFilters} />
 
       <div className="flex min-w-0 flex-col overflow-hidden rounded-xl bg-surface-container border border-primary-container/30 shadow-card">
-        <div className="flex items-center justify-between bg-surface-container-high p-space-md">
-          <div className="flex items-center gap-space-sm">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary">
-              <Icon name="view_timeline" className="text-[18px]" />
-            </div>
-            <span className="font-title-sm text-title-sm font-bold text-on-surface">Patent Takip Listesi</span>
+        <div className="flex items-center gap-space-sm bg-surface-container-high p-space-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-md">
+            <Icon name="view_timeline" className="text-[20px]" />
           </div>
-          <div className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
-            <span>Yatay kaydırma: aktif</span>
-            <Icon name="swap_horiz" className="text-[16px]" />
-          </div>
+          <span className="font-title-sm text-title-sm font-bold text-on-surface">Fikri Hak Portföy Kütüğü</span>
         </div>
         <PatentTable
           items={data?.items ?? null}

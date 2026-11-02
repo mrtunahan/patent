@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { isAbort } from '../api/client'
 import { listPatents } from '../api/patents'
 import type { FsmhTypeRead } from '../api/types'
-import { fsmhTypeStyle } from '../lib/format'
+import { percent, typeStyle } from '../lib/format'
 import Icon from './Icon'
 
 interface Summary {
@@ -13,19 +13,9 @@ interface Summary {
 const count = (params: Parameters<typeof listPatents>[0], signal: AbortSignal) =>
   listPatents({ ...params, page_size: 1 }, signal).then((page) => page.total)
 
-function Card({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
-  return (
-    <div className="relative flex min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-primary-container/30 bg-surface-container-lowest p-space-md shadow-card">
-      <div className="flex items-center justify-between">
-        <span className="emboss-text rounded-full border border-primary-container/40 bg-primary-fixed px-space-md py-1 font-label-sm text-label-sm font-semibold uppercase tracking-wider text-on-primary-fixed shadow-emboss">{title}</span>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary shadow-md">
-          <Icon name={icon} className="text-[20px]" />
-        </div>
-      </div>
-      {children}
-    </div>
-  )
-}
+const pillClass =
+  'emboss-text inline-flex items-center gap-space-xs rounded-full border border-primary-container/40 bg-primary-fixed px-space-md py-1 font-label-sm text-label-sm font-semibold uppercase tracking-wider text-on-primary-fixed shadow-emboss'
+const cardClass = 'relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-primary-container/30 bg-surface-container-lowest p-space-md shadow-card'
 
 export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: FsmhTypeRead[] | null; refreshKey: number }) {
   const [summary, setSummary] = useState<Summary | null>(null)
@@ -53,31 +43,71 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
   }, [fsmhTypes, refreshKey])
 
   const value = (n: number | undefined) => (n === undefined ? '-' : n)
+  const total = summary?.total ?? 0
+  const rows = summary?.byType ?? fsmhTypes?.map((type) => ({ id: type.id, name: type.name, count: undefined as number | undefined })) ?? []
+  const leader = summary ? summary.byType.reduce<(typeof summary.byType)[number] | null>((best, item) => (item.count > 0 && (!best || item.count > best.count) ? item : best), null) : null
 
   return (
-    <div className="grid grid-cols-1 gap-space-md sm:grid-cols-2">
-      <Card title="Toplam Başvuru Dosyası" icon="folder_special">
-        <div className="mt-space-md flex items-baseline gap-space-sm">
-          <span className="font-display-lg text-display-lg font-bold tracking-tight text-on-surface">{value(summary?.total)}</span>
-          <span className="font-label-md text-label-md text-on-surface-variant">aktif kayıt</span>
+    <div className="grid grid-cols-1 gap-space-md lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+      <div className={cardClass}>
+        <div className="flex items-center justify-between gap-space-sm">
+          <span className={pillClass}>
+            <Icon name="folder_special" className="text-[16px]" />
+            Toplam Başvuru Dosyası
+          </span>
         </div>
+        <div className="mt-space-md flex items-baseline gap-space-sm border-t border-primary-container/20 pt-space-md">
+          <span className="font-display-lg text-display-lg font-bold tracking-tight text-on-surface">{value(summary?.total)}</span>
+          <span className="font-label-md text-label-md font-semibold text-on-surface-variant">Aktif Dosya</span>
+        </div>
+        <p className="mt-space-xs font-label-sm text-label-sm text-on-surface-variant">Takip listesindeki aktif başvuru kayıtları</p>
         {error && <span className="mt-space-sm font-label-sm text-label-sm text-error">Özet yüklenemedi.</span>}
-        <div className="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-primary/10" />
-      </Card>
-      <Card title="Türe Göre" icon="category">
-        <ul className="mt-space-md grid grid-cols-1 gap-x-space-md min-[420px]:grid-cols-2 gap-y-space-xs">
-          {(summary?.byType ?? fsmhTypes?.map((type) => ({ id: type.id, name: type.name, count: undefined })) ?? []).map((item) => (
-            <li key={item.id} className="flex items-center justify-between gap-space-sm font-label-md text-label-md text-on-surface">
-              <span className="flex min-w-0 items-center gap-space-xs">
-                <span className={`h-2 w-2 shrink-0 rounded-full ${fsmhTypeStyle(item.name).dot}`} />
-                <span className="truncate">{item.name}</span>
-              </span>
-              <strong className="font-title-sm text-title-sm">{value(item.count)}</strong>
-            </li>
-          ))}
+        <div className="pointer-events-none absolute -bottom-6 -right-6 h-28 w-28 rounded-full bg-primary/10" />
+      </div>
+
+      <div className={cardClass}>
+        <div className="flex flex-wrap items-center gap-space-sm">
+          <span className={pillClass}>
+            <Icon name="category" className="text-[16px]" />
+            Türe Göre Portföy Dağılımı
+          </span>
+          <span className="font-label-md text-label-md text-on-surface-variant">· {fsmhTypes?.length ?? 0} kategori</span>
+        </div>
+        <ul className="mt-space-md grid grid-cols-1 gap-x-space-lg gap-y-space-md border-t border-primary-container/20 pt-space-md md:grid-cols-2">
+          {rows.map((item) => {
+            const style = typeStyle(item.name)
+            const share = item.count === undefined ? 0 : total > 0 ? (item.count / total) * 100 : 0
+            return (
+              <li key={item.id} className="flex min-w-0 flex-col gap-space-xs">
+                <div className="flex items-center justify-between gap-space-sm">
+                  <span className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-space-sm py-1 font-label-sm text-label-sm font-semibold ${style.pill}`}>
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${style.dot}`} />
+                    <span className="truncate">{item.name}</span>
+                  </span>
+                  <span className="flex shrink-0 items-baseline gap-space-xs">
+                    <strong className="font-title-sm text-title-sm text-on-surface">{value(item.count)}</strong>
+                    {item.count !== undefined && <span className="font-label-sm text-label-sm text-on-surface-variant">%{percent(item.count, total)}</span>}
+                  </span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
+                  <div className={`h-full rounded-full ${style.dot}`} style={{ width: `${share}%` }} />
+                </div>
+                {leader?.id === item.id && (
+                  <span className="self-start rounded-full bg-primary-fixed px-space-sm py-0.5 font-label-sm text-label-sm font-semibold text-on-primary-fixed">
+                    %{percent(item.count ?? 0, total)} Portföy Lideri
+                  </span>
+                )}
+              </li>
+            )
+          })}
         </ul>
-        <div className="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-primary/10" />
-      </Card>
+        <div className="mt-space-md flex items-center justify-between border-t border-primary-container/20 pt-space-sm font-label-md text-label-md text-on-surface-variant">
+          <span>
+            Toplam <strong className="text-on-surface">{value(summary?.total)}</strong> kayıt
+          </span>
+        </div>
+        <div className="pointer-events-none absolute -bottom-6 -right-6 h-28 w-28 rounded-full bg-primary/10" />
+      </div>
     </div>
   )
 }

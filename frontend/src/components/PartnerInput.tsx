@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { normalizeKey } from '../lib/format'
+import { controlClass } from './formStyles'
 import Icon from './Icon'
 
 interface Props {
@@ -45,7 +46,7 @@ export default function PartnerInput({ value, onChange, disabled, error }: Props
             }
           }}
           placeholder="Ortak kurum adı (örn. Ankara Üni.)"
-          className="h-10 min-w-0 flex-1 rounded-lg bg-surface-container-lowest px-space-sm font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:bg-surface-bright focus:outline-none"
+          className={`h-10 min-w-0 flex-1 px-space-sm ${controlClass}`}
         />
         <button
           type="button"

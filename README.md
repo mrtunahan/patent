@@ -178,6 +178,13 @@ sqlite3 data/patent.db ".backup 'data/source/patent-yedek-YYYYMMDD.db'"
 Ayrıntılı teknik kararlar yukarıdaki "Onaylanan Kararlar" bölümündedir.
 
 - **Görünüm (Adım 13):** özet kartları çerçeveli/gölgeli, başlıkları kabartmalı mor hap içinde; sayfa zemini `surface-container-low`, kart, filtre ve tablo kabukları ince çerçeve ve `shadow-card` kullanır (`tailwind.config.js` `boxShadow`, `index.css` `.emboss-text`). Veri ve davranış değişmedi.
+- **Görünüm kararları (Adım 14):**
+  - **Patent Listesi:** Filtre çubuğunda yalnızca arama, FSMH Türü, Başvuru Sahibi ve Bölüm / Birim kaldı; Vekil Firma, Vekil Durumu ve "Başvuru tarihinden itibaren" arayüzden çıkarıldı (backend `attorney_firm_id`, `has_attorney`, `date_from`, `date_to` parametreleri durur). Tabloda yalnızca No, Buluş Başlığı, Başvuru Sahibi, Bölüm / Birim, FSMH Türü, Durum ve İşlemler görünür; diğer sütunlar `PatentTable.tsx` içinde `hiddenInList` bayrağıyla yalnızca listede gizlidir (çekmece, Excel dışa aktarma ve API etkilenmez). Tablo başlığı "Fikri Hak Portföy Kütüğü".
+  - **Menü:** Kenar çubuğu ikon şeridine daralır (lg ve üstü); durum `localStorage`'da (`sidebarCollapsed`) saklanır.
+  - **Özet kartları:** Toplam Başvuru Dosyası ve yüzdeli, ilerleme çubuklu "Türe Göre Portföy Dağılımı" (tür renkleri `typeStyle` ve `tailwind.config.js` `type` grubu).
+  - **Özet penceresi:** Dört sayfadaki patent sayısı düğmesi ortada açılan `SummaryModal`'ı açar (sağdan panel kaldırıldı); `/api/applicants/summary`, `/api/departments/summary`, `/api/attorney_firms/summary` ve `/api/partners` patent öğelerine `fsmh_type_name`, `status`, `application_date`, `registration_date` alanları eklendi (mevcut alanlar aynen).
+  - **Vekil Firmalar tablosu:** "Unvan" sütunu tablodan çıkarıldı (form alanı ve veritabanı kalır).
+  - **Form alanları:** Tüm giriş alanları ortak `controlClass` ile beyaz zeminli, koyu ince çerçevelidir.
 
 ## Madde 13 doğrulama matrisi
 

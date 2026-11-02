@@ -7,13 +7,10 @@ export interface Filters {
   fsmhTypeId: string
   applicantId: string
   departmentId: string
-  attorneyFirmId: string
-  hasAttorney: '' | 'true' | 'false'
-  dateFrom: string
 }
 
 export const EMPTY_FILTERS: Filters = {
-  q: '', fsmhTypeId: '', applicantId: '', departmentId: '', attorneyFirmId: '', hasAttorney: '', dateFrom: '',
+  q: '', fsmhTypeId: '', applicantId: '', departmentId: '',
 }
 
 interface Props {
@@ -72,7 +69,7 @@ export default function FilterBar({ filters, lookups, total, onChange, onReset }
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-space-sm sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-space-sm sm:grid-cols-3">
         <select aria-label="FSMH Türü" value={filters.fsmhTypeId} onChange={(e) => onChange({ fsmhTypeId: e.target.value })} className={selectClass}>
           <option value="">FSMH Türü: Tümü</option>
           {options(lookups?.fsmhTypes, (t) => t.name)}
@@ -85,27 +82,6 @@ export default function FilterBar({ filters, lookups, total, onChange, onReset }
           <option value="">Bölüm / Birim: Tümü</option>
           {options(lookups?.departments, (d) => d.name)}
         </select>
-        <select aria-label="Vekil Firma" value={filters.attorneyFirmId} onChange={(e) => onChange({ attorneyFirmId: e.target.value })} className={selectClass}>
-          <option value="">Vekil Firma: Tümü</option>
-          {options(lookups?.attorneyFirms, (f) => f.name)}
-        </select>
-        <select
-          aria-label="Vekil Durumu"
-          value={filters.hasAttorney}
-          onChange={(e) => onChange({ hasAttorney: e.target.value as Filters['hasAttorney'] })}
-          className={selectClass}
-        >
-          <option value="">Vekil Durumu: Tümü</option>
-          <option value="true">Vekilli</option>
-          <option value="false">Vekilsiz</option>
-        </select>
-      </div>
-
-      <div className="flex flex-wrap items-end gap-space-md">
-        <label className="flex flex-col gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
-          Başvuru tarihinden itibaren
-          <input type="date" value={filters.dateFrom} onChange={(e) => onChange({ dateFrom: e.target.value })} className="h-10 rounded-lg bg-surface-container-lowest px-space-sm font-body-md text-body-md text-on-surface focus:outline-none" />
-        </label>
       </div>
 
       <div className="flex flex-wrap items-center gap-space-sm pt-space-xs font-label-sm text-label-sm text-on-surface-variant">

@@ -12,6 +12,15 @@ export default {
         card: '0 4px 12px -2px rgba(55,33,70,0.16), 0 2px 4px -2px rgba(55,33,70,0.10)',
       },
       colors: {
+        // Adım 14: FSMH türü renk grupları (hap zemini / metin / nokta-şerit)
+        type: {
+          patent: { bg: '#e4def6', fg: '#33267a', dot: '#5b4bb5' },
+          tasarim: { bg: '#f1dcf6', fg: '#66287a', dot: '#a24ab8' },
+          faydali: { bg: '#d3efec', fg: '#0f5753', dot: '#1a9a92' },
+          marka: { bg: '#fce8c6', fg: '#794800', dot: '#d98c00' },
+          telif: { bg: '#d6e8fa', fg: '#0b4878', dot: '#2c88de' },
+          other: { bg: '#e4e1e7', fg: '#4b454d', dot: '#7c757e' },
+        },
         'on-error-container': '#93000a',
         'on-primary-fixed-variant': '#543e64',
         secondary: '#6b586d',

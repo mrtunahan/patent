@@ -19,7 +19,7 @@ function pageNumbers(page: number, last: number): number[] {
 }
 
 const navButton =
-  'flex h-8 w-8 items-center justify-center rounded bg-surface-container-high text-on-surface transition-colors hover:bg-surface-container-highest disabled:opacity-50'
+  'flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container-high text-on-surface transition-colors hover:bg-surface-container-highest disabled:opacity-50'
 
 export default function Pagination({ page, pageSize, total, onPage, onPageSize }: Props) {
   const last = Math.max(1, Math.ceil(total / pageSize))
@@ -29,7 +29,7 @@ export default function Pagination({ page, pageSize, total, onPage, onPageSize }
   return (
     <div className="flex flex-col items-center justify-between gap-space-md bg-surface-container p-space-md font-label-md text-label-md text-on-surface-variant sm:flex-row">
       <div className="flex flex-wrap items-center gap-space-sm">
-        <span>Sayfa başına kayıt:</span>
+        <span>Sayfa Başına Göster:</span>
         <select
           aria-label="Sayfa başına kayıt"
           value={pageSize}
@@ -58,7 +58,7 @@ export default function Pagination({ page, pageSize, total, onPage, onPageSize }
             onClick={() => onPage(n)}
             className={
               n === page
-                ? 'flex h-8 w-8 items-center justify-center rounded bg-primary font-bold text-on-primary'
+                ? 'flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-on-primary'
                 : navButton
             }
           >

@@ -148,6 +148,10 @@ export interface FsmhTypeIn {
 export interface PatentRef {
   id: number
   title: string
+  fsmh_type_name: string
+  status: PatentStatus | null
+  application_date: string | null
+  registration_date: string | null
 }
 
 export interface PartnerSummary {
