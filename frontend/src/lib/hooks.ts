@@ -65,18 +65,3 @@ export const matchesQuery = (q: string, ...texts: (string | null | undefined)[])
   const needle = q.trim().toLocaleLowerCase('tr')
   return !needle || texts.some((text) => (text ?? '').toLocaleLowerCase('tr').includes(needle))
 }
-
-// Açık / kapalı satır kümesi (patent listesi açılırları için).
-export function useToggleSet() {
-  const [open, setOpen] = useState<Set<number>>(new Set())
-  const toggle = useCallback(
-    (id: number) =>
-      setOpen((prev) => {
-        const next = new Set(prev)
-        if (!next.delete(id)) next.add(id)
-        return next
-      }),
-    [],
-  )
-  return { open, toggle }
-}

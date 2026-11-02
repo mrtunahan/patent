@@ -17,3 +17,10 @@ class LookupSummary(ReadSchema):
     name: str
     patent_count: int
     patents: list[PatentRef]
+
+
+class ApplicantSummary(ReadSchema):
+    id: int
+    full_name: str
+    patent_count: int
+    patents: list[PatentRef]

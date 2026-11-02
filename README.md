@@ -100,7 +100,7 @@ sqlite3 data/patent.db ".backup 'data/source/patent-yedek-YYYYMMDD.db'"
 ### Bilinen sınırlamalar
 
 - Kimlik doğrulama yoktur; uygulamaya erişen herkes tüm işlemleri yapabilir (şartname gereği).
-- Madde 7'deki 27 uç ve `/api/health` gerçektir; ek olarak `GET /api/patents/export`, `GET /api/partners`, `GET /api/departments/summary` ve `GET /api/attorney_firms/summary` vardır. `/api/settings` uçları backend'de durur ama arayüzde Ayarlar sayfası yoktur.
+- Madde 7'deki 27 uç ve `/api/health` gerçektir; ek olarak `GET /api/patents/export`, `GET /api/partners`, `GET /api/departments/summary` ve `GET /api/attorney_firms/summary` ve `GET /api/applicants/summary` vardır. `/api/settings` uçları backend'de durur ama arayüzde Ayarlar sayfası yoktur.
 - 500 (işlenmeyen sunucu hatası) yanıtlarında `frame-ancestors` başlığı eklenmeyebilir (Starlette `ServerErrorMiddleware`).
 - Proxy'nin öneki silmediği bir kurulumda `ROOT_PATH` yollarda çift önek oluşturur: `/patent/api/...` istekleri JSON yerine `index.html` (200), uzantılı dosyalar (`/patent/assets/...`) 404 döner. Bu durum entegrasyon aşamasında ele alınacaktır.
 - `normalize_tr` (karşılaştırma/arama anahtarı, `core/text.py`) sınırları: (1) zaten küçük harfli ayrışık `i`+U+0307 girdisi `i`'ye eşitlenmez (`İ` ve `I`+U+0307 doğru işlenir); bilinçli sınırdır, Excel import (Aşama 13) öncesi yeniden değerlendirilecek. (2) Büyük `I` Türkçe kuralıyla `ı` olur: `Isparta` ≠ `isparta`; İngilizce yazılmış `FIRMA` ile `firma` eşleşmez. (3) `None` desteklenmez (`AttributeError`); çağıran boş/None değeri önceden ele almalıdır. (4) Aksan katlanmaz (`şaban` ≠ `saban`).
@@ -173,7 +173,7 @@ sqlite3 data/patent.db ".backup 'data/source/patent-yedek-YYYYMMDD.db'"
 11. **Durum ve Tescil Tarihi (Adım 11):** `patents.registration_date` ve `patents.status` (`Tescillendi` / `Süreç Devam Ediyor` / `Reddedildi`) eklendi (migration `0002`). "Mevcut Durum" Şartname 2.2'den kullanıcı kararıyla çıkarılmıştı; bu alanla kısmen geri geldi. Tescil tarihi başvuru tarihinden önce olamaz (422). Mükerrer kontrolü değişmedi. Excel dışa aktarma bu iki sütunu da içerir; Excel import scripti değişmedi.
 12. **Vekil firma yeni alanları:** `tax_no` (10 veya 11 haneli rakam), `title` (unvan), `email`; hepsi isteğe bağlı. `contact_info` ve `is_active` backend'de durur, arayüzde yoktur.
 13. **Telif Hakkı türü:** `fsmh_types` seed'ine `0002` ile "Telif Hakkı" eklendi (Şartname 5.3 seed'i 4 türdü; artık 5).
-14. **Yeni salt okunur uçlar (Madde 7 tablosuna ek):** `GET /api/partners`, `GET /api/departments/summary`, `GET /api/attorney_firms/summary`. Ortaklar ayrı tablo değildir; aktif patentlerin `patent_partners` kayıtlarından `normalize_tr` ile gruplanarak türetilir (görünen ad: grubun en küçük id'li yazımı). Arayüzde Ortaklar sayfası salt okunurdur; Bölümler ve Vekil Firmalar sayfalarında "Patent Sayısı" açılır listesi vardır.
+14. **Yeni salt okunur uçlar (Madde 7 tablosuna ek):** `GET /api/partners`, `GET /api/departments/summary`, `GET /api/attorney_firms/summary`. Ortaklar ayrı tablo değildir; aktif patentlerin `patent_partners` kayıtlarından `normalize_tr` ile gruplanarak türetilir (görünen ad: grubun en küçük id'li yazımı). Arayüzde Ortaklar sayfası salt okunurdur; Başvuru Sahipleri, Bölümler, Vekil Firmalar ve Ortaklar sayfalarındaki "Patent Sayısı" düğmesi, kayda bağlı patent başlıklarını gösteren sağdan açılan özet panelini açar (başlığa tıklamak `/patents/{id}` düzenleme çekmecesini açar). Patent çekmecesinde Durum üç düğmeli radiogroup'tur (seçiliye tekrar tıklamak seçimi kaldırır); arayüzde "Varsayılan Bölüm" yerine "Bölüm" yazar.
 
 Ayrıntılı teknik kararlar yukarıdaki "Onaylanan Kararlar" bölümündedir.
 
@@ -197,7 +197,7 @@ Ayrıntılı teknik kararlar yukarıdaki "Onaylanan Kararlar" bölümündedir.
 | Migration `0002` (yeni sütunlar, Telif Hakkı seed'i, idempotent, downgrade) | `tests/test_migrations.py` (`test_0002_*`, `test_models_and_migration_in_sync`) | Tamam |
 | Durum / tescil tarihi kuralları | `tests/test_patent_status.py` | Tamam |
 | Vekil firma vergi no / e-posta doğrulaması | `tests/test_attorney_firms.py::test_new_fields_trimmed_empty_to_none_and_validated` | Tamam |
-| Özet uçları (ortaklar, bölüm, vekil firma) | `tests/test_summaries.py` | Tamam |
+| Özet uçları (ortaklar, bölüm, vekil firma, başvuru sahibi) | `tests/test_summaries.py` | Tamam |
 | Madde 6/6 tarih biçimi (ISO / GG.AA.YYYY) | `test_schemas.py`; arayüzde `lib/format.ts` (elle) | Tamam |
 
 ## Yol haritası

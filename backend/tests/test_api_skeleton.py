@@ -91,9 +91,9 @@ def test_every_madde7_route_is_in_openapi(client):
         assert method.lower() in paths[template], (method, path)
     # Madde 7 tablosuna ek uç (Adım 9): Excel dışa aktarma
     assert list(paths["/api/patents/export"]) == ["get"]
-    for path in ("/api/partners", "/api/departments/summary", "/api/attorney_firms/summary"):
+    for path in ("/api/partners", "/api/departments/summary", "/api/attorney_firms/summary", "/api/applicants/summary"):
         assert list(paths[path]) == ["get"], path  # Adım 11 salt okunur özet uçları
-    assert sum(len(item) for item in paths.values()) == 27 + 1 + 1 + 3  # +health +export +3 özet
+    assert sum(len(item) for item in paths.values()) == 27 + 1 + 1 + 4  # +health +export +4 özet
 
 
 def test_openapi_uses_phase7_schemas(client):

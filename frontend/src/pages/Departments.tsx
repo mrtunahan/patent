@@ -1,14 +1,15 @@
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createDepartment, listDepartmentSummary, removeDepartment, updateDepartment } from '../api/lookups'
 import type { IdName, LookupSummary } from '../api/types'
 import ConfirmDialog from '../components/ConfirmDialog'
 import DrawerShell from '../components/DrawerShell'
 import { Field, controlClass } from '../components/formStyles'
-import { CountToggle, PageHeader, PatentsRow, RowActions, SearchCard, TableCard, cell } from '../components/ListPage'
+import { CountToggle, PageHeader, RowActions, SearchCard, TableCard, cell } from '../components/ListPage'
+import SummaryDrawer from '../components/SummaryDrawer'
 import { useToast } from '../components/Toast'
 import { useLookups } from '../lib/lookups'
-import { describeError, matchesQuery, useList, useRowDelete, useToggleSet } from '../lib/hooks'
+import { describeError, matchesQuery, useList, useRowDelete } from '../lib/hooks'
 
 function DepartmentDrawer({ record, onClose, onSaved, onDeleteFailed }: { record: IdName | null; onClose: () => void; onSaved: (message: string) => void; onDeleteFailed: (message: string) => void }) {
   const [name, setName] = useState(record?.name ?? '')
@@ -63,7 +64,7 @@ export default function Departments() {
   const { reload: reloadLookups } = useLookups()
   const navigate = useNavigate()
   const list = useList(listDepartmentSummary)
-  const expanded = useToggleSet()
+  const [panel, setPanel] = useState<LookupSummary | null>(null)
   const [q, setQ] = useState('')
   const [drawer, setDrawer] = useState<null | 'new' | LookupSummary>(null)
 
@@ -103,22 +104,21 @@ export default function Departments() {
         }
       >
         {visible.map((d, index) => (
-          <Fragment key={d.id}>
             <tr onClick={() => setDrawer(d)} className={`cursor-pointer transition-colors hover:bg-surface-bright ${index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface'}`}>
               <td className={`${cell} font-label-md text-label-md text-on-surface-variant`}>{index + 1}</td>
               <td className={`${cell} font-medium text-on-surface`}>{d.name}</td>
               <td className={cell}>
-                <CountToggle count={d.patent_count} open={expanded.open.has(d.id)} onToggle={() => expanded.toggle(d.id)} />
+                <CountToggle count={d.patent_count} onClick={() => setPanel(d)} />
               </td>
               <td className={cell}>
                 <RowActions onEdit={() => setDrawer(d)} onDelete={() => del.setTarget(d)} />
               </td>
             </tr>
-            {expanded.open.has(d.id) && d.patent_count > 0 && <PatentsRow colSpan={4} patents={d.patents} onOpen={(id) => navigate(`/patents/${id}`)} />}
-          </Fragment>
+
         ))}
       </TableCard>
 
+      {panel && <SummaryDrawer title={panel.name} patents={panel.patents} onClose={() => setPanel(null)} onOpenPatent={(id) => navigate(`/patents/${id}`)} />}
       {drawer && (
         <DepartmentDrawer
           key={drawer === 'new' ? 'new' : drawer.id}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ApiError } from '../api/client'
 import { createPatent, getPatent, removePatent, updatePatent } from '../api/patents'
 import { createApplicant, createAttorneyFirm, createDepartment, createFsmhType } from '../api/lookups'
+import { statusStyle } from '../lib/format'
 import { PATENT_STATUSES, type PatentIn, type PatentStatus } from '../api/types'
 import { useLookups } from '../lib/lookups'
 import ConfirmDialog from './ConfirmDialog'
@@ -180,7 +181,7 @@ export default function PatentDrawer({ mode, onClose, onSaved, onNotFound }: Pro
             error={fieldErrors.applicant_id}
             addedMessage="Başvuru sahibi eklendi."
             onChange={(value) => {
-              // Bölüm boşsa seçilen kişinin varsayılan bölümü gelir; kullanıcı değiştirebilir.
+              // Bölüm boşsa seçilen kişinin bölümü gelir; kullanıcı değiştirebilir.
               const defaultDepartment = lookups?.applicants.find((a) => String(a.id) === value)?.department_id
               setForm((prev) => ({ ...prev, applicantId: value, departmentId: prev.departmentId || (defaultDepartment ? String(defaultDepartment) : '') }))
             }}
@@ -241,16 +242,32 @@ export default function PatentDrawer({ mode, onClose, onSaved, onNotFound }: Pro
             <input id="formRegistrationDate" type="date" value={form.registrationDate} disabled={busy} onChange={(e) => set('registrationDate', e.target.value)} className={`h-10 px-space-sm ${controlClass}`} />
           </Field>
         </div>
-        <Field id="formStatus" text="8. Durum" error={fieldErrors.status}>
-          <select id="formStatus" value={form.status} disabled={busy} onChange={(e) => set('status', e.target.value)} className={`h-10 px-space-sm md:max-w-xs ${controlClass}`}>
-            <option value="">Seçiniz</option>
-            {PATENT_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </Field>
+        <div className="flex flex-col gap-space-xs">
+          <span id="formStatusLabel" className={labelClass}>
+            8. Durum
+          </span>
+          <div role="radiogroup" aria-labelledby="formStatusLabel" className="flex flex-wrap gap-space-sm">
+            {PATENT_STATUSES.map((status) => {
+              const selected = form.status === status
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={busy}
+                  onClick={() => set('status', selected ? '' : status)} // seçiliye tekrar tıklamak seçimi kaldırır
+                  className={`h-10 rounded-lg border px-space-md font-label-lg text-label-lg font-semibold transition-colors disabled:opacity-60 ${
+                    selected ? `border-transparent ${statusStyle(status)}` : 'border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-bright'
+                  }`}
+                >
+                  {status}
+                </button>
+              )
+            })}
+          </div>
+          {fieldErrors.status && <span className="font-label-sm text-label-sm text-error">{fieldErrors.status}</span>}
+        </div>
         <Field id="formNotes" text="9. Notlar / Açıklama" error={fieldErrors.notes}>
           <textarea id="formNotes" rows={3} value={form.notes} disabled={busy} onChange={(e) => set('notes', e.target.value)} className={`w-full p-space-sm ${controlClass}`} />
         </Field>

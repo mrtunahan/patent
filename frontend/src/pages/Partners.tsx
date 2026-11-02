@@ -1,13 +1,15 @@
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listPartners } from '../api/lookups'
-import { CountToggle, PageHeader, PatentsRow, SearchCard, TableCard, cell } from '../components/ListPage'
-import { matchesQuery, useList, useToggleSet } from '../lib/hooks'
+import type { PartnerSummary } from '../api/types'
+import { CountToggle, PageHeader, SearchCard, TableCard, cell } from '../components/ListPage'
+import SummaryDrawer from '../components/SummaryDrawer'
+import { matchesQuery, useList } from '../lib/hooks'
 
 export default function Partners() {
   const navigate = useNavigate()
   const list = useList(listPartners)
-  const expanded = useToggleSet()
+  const [panel, setPanel] = useState<PartnerSummary | null>(null)
   const [q, setQ] = useState('')
   const visible = (list.items ?? []).filter((p) => matchesQuery(q, p.name))
 
@@ -32,22 +34,17 @@ export default function Partners() {
           </>
         }
       >
-        {visible.map((p, index) => {
-          const key = (list.items ?? []).indexOf(p) // arama filtresi değişse de açık satır aynı kalır
-          return (
-          <Fragment key={p.name}>
-            <tr className={index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface'}>
-              <td className={`${cell} font-label-md text-label-md text-on-surface-variant`}>{index + 1}</td>
-              <td className={`${cell} font-medium text-on-surface`}>{p.name}</td>
-              <td className={cell}>
-                <CountToggle count={p.patent_count} open={expanded.open.has(key)} onToggle={() => expanded.toggle(key)} />
-              </td>
-            </tr>
-            {expanded.open.has(key) && <PatentsRow colSpan={3} patents={p.patents} onOpen={(id) => navigate(`/patents/${id}`)} />}
-          </Fragment>
-          )
-        })}
+        {visible.map((p, index) => (
+          <tr key={p.name} className={index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface'}>
+            <td className={`${cell} font-label-md text-label-md text-on-surface-variant`}>{index + 1}</td>
+            <td className={`${cell} font-medium text-on-surface`}>{p.name}</td>
+            <td className={cell}>
+              <CountToggle count={p.patent_count} onClick={() => setPanel(p)} />
+            </td>
+          </tr>
+        ))}
       </TableCard>
+      {panel && <SummaryDrawer title={panel.name} patents={panel.patents} onClose={() => setPanel(null)} onOpenPatent={(id) => navigate(`/patents/${id}`)} />}
     </div>
   )
 }

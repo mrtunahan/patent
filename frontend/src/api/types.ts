@@ -160,3 +160,10 @@ export interface LookupSummary extends IdName {
   patent_count: number
   patents: PatentRef[]
 }
+
+export interface ApplicantSummary {
+  id: number
+  full_name: string
+  patent_count: number
+  patents: PatentRef[]
+}

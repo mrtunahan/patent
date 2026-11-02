@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
-import { createApplicant, listApplicants, removeApplicant, updateApplicant } from '../api/lookups'
-import type { ApplicantRead, DepartmentRead } from '../api/types'
+import { useNavigate } from 'react-router-dom'
+import { createApplicant, listApplicants, listApplicantSummary, removeApplicant, updateApplicant } from '../api/lookups'
+import type { ApplicantRead, DepartmentRead, PatentRef } from '../api/types'
 import ConfirmDialog from '../components/ConfirmDialog'
 import DrawerShell from '../components/DrawerShell'
 import { Field, controlClass } from '../components/formStyles'
-import { PageHeader, RowActions, SearchCard, TableCard, cell } from '../components/ListPage'
+import { CountToggle, PageHeader, RowActions, SearchCard, TableCard, cell } from '../components/ListPage'
+import SummaryDrawer from '../components/SummaryDrawer'
 import { useToast } from '../components/Toast'
 import { useLookups } from '../lib/lookups'
 import { describeError, matchesQuery, useList, useRowDelete } from '../lib/hooks'
@@ -59,7 +61,7 @@ function ApplicantDrawer({ record, departments, onClose, onSaved, onDeleteFailed
       <Field id="applicantName" text="Ad Soyad *" error={fieldErrors.full_name}>
         <input id="applicantName" type="text" value={name} maxLength={200} disabled={saving} onChange={(e) => setName(e.target.value)} className={`h-10 px-space-sm ${controlClass}`} />
       </Field>
-      <Field id="applicantDepartment" text="Varsayılan Bölüm" error={fieldErrors.department_id}>
+      <Field id="applicantDepartment" text="Bölüm" error={fieldErrors.department_id}>
         <select id="applicantDepartment" value={departmentId} disabled={saving} onChange={(e) => setDepartmentId(e.target.value)} className={`h-10 px-space-sm ${controlClass}`}>
           <option value="">Seçiniz</option>
           {departments.map((d) => (
@@ -76,7 +78,12 @@ function ApplicantDrawer({ record, departments, onClose, onSaved, onDeleteFailed
 export default function Applicants() {
   const toast = useToast()
   const { lookups, reload: reloadLookups } = useLookups()
-  const list = useList(listApplicants)
+  const navigate = useNavigate()
+  const applicants = useList(listApplicants)
+  const summary = useList(listApplicantSummary)
+  const list = { items: applicants.items, status: applicants.status === 'ready' && summary.status !== 'ready' ? summary.status : applicants.status, errorMessage: applicants.errorMessage || summary.errorMessage, reload: () => { applicants.reload(); summary.reload() } }
+  const stats = useMemo(() => new Map((summary.items ?? []).map((x) => [x.id, x])), [summary.items])
+  const [panel, setPanel] = useState<{ name: string; patents: PatentRef[] } | null>(null)
   const [q, setQ] = useState('')
   const [drawer, setDrawer] = useState<null | 'new' | ApplicantRead>(null)
 
@@ -105,14 +112,15 @@ export default function Applicants() {
         status={list.status}
         errorMessage={list.errorMessage}
         isEmpty={visible.length === 0}
-        colSpan={4}
-        minWidth="640px"
+        colSpan={5}
+        minWidth="720px"
         onRetry={list.reload}
         head={
           <>
             <th className={`${cell} w-[80px]`}>No</th>
             <th className={`${cell} w-[240px]`}>Ad Soyad</th>
-            <th className={cell}>Varsayılan Bölüm</th>
+            <th className={cell}>Bölüm</th>
+            <th className={`${cell} w-[140px]`}>Patent Sayısı</th>
             <th className={`${cell} w-[110px] text-center`}>İşlemler</th>
           </>
         }
@@ -123,12 +131,16 @@ export default function Applicants() {
             <td className={`${cell} font-medium text-on-surface`}>{a.full_name}</td>
             <td className={`${cell} text-on-surface-variant`}>{nameOf(a) || '-'}</td>
             <td className={cell}>
+              <CountToggle count={stats.get(a.id)?.patent_count ?? 0} onClick={() => setPanel({ name: a.full_name, patents: stats.get(a.id)?.patents ?? [] })} />
+            </td>
+            <td className={cell}>
               <RowActions onEdit={() => setDrawer(a)} onDelete={() => del.setTarget(a)} />
             </td>
           </tr>
         ))}
       </TableCard>
 
+      {panel && <SummaryDrawer title={panel.name} patents={panel.patents} onClose={() => setPanel(null)} onOpenPatent={(id) => navigate(`/patents/${id}`)} />}
       {drawer && (
         <ApplicantDrawer
           key={drawer === 'new' ? 'new' : drawer.id}

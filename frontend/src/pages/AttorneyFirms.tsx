@@ -1,14 +1,15 @@
-import { Fragment, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createAttorneyFirm, listAttorneyFirmSummary, listAttorneyFirms, removeAttorneyFirm, updateAttorneyFirm } from '../api/lookups'
-import type { AttorneyFirmRead } from '../api/types'
+import type { AttorneyFirmRead, PatentRef } from '../api/types'
 import ConfirmDialog from '../components/ConfirmDialog'
 import DrawerShell from '../components/DrawerShell'
 import { Field, controlClass } from '../components/formStyles'
-import { CountToggle, PageHeader, PatentsRow, RowActions, SearchCard, TableCard, cell } from '../components/ListPage'
+import { CountToggle, PageHeader, RowActions, SearchCard, TableCard, cell } from '../components/ListPage'
+import SummaryDrawer from '../components/SummaryDrawer'
 import { useToast } from '../components/Toast'
 import { useLookups } from '../lib/lookups'
-import { describeError, matchesQuery, useList, useRowDelete, useToggleSet } from '../lib/hooks'
+import { describeError, matchesQuery, useList, useRowDelete } from '../lib/hooks'
 
 function FirmDrawer({ record, onClose, onSaved, onDeleteFailed }: { record: AttorneyFirmRead | null; onClose: () => void; onSaved: (message: string) => void; onDeleteFailed: (message: string) => void }) {
   const [name, setName] = useState(record?.name ?? '')
@@ -86,7 +87,7 @@ export default function AttorneyFirms() {
   const navigate = useNavigate()
   const firms = useList(listAttorneyFirms)
   const summary = useList(listAttorneyFirmSummary)
-  const expanded = useToggleSet()
+  const [panel, setPanel] = useState<{ name: string; patents: PatentRef[] } | null>(null)
   const list = { items: firms.items, status: firms.status === 'ready' && summary.status !== 'ready' ? summary.status : firms.status, errorMessage: firms.errorMessage || summary.errorMessage, reload: () => { firms.reload(); summary.reload() } }
   const stats = useMemo(() => new Map((summary.items ?? []).map((x) => [x.id, x])), [summary.items])
   const [q, setQ] = useState('')
@@ -134,7 +135,6 @@ export default function AttorneyFirms() {
           const stat = stats.get(f.id)
           const count = stat?.patent_count ?? 0
           return (
-            <Fragment key={f.id}>
               <tr onClick={() => setDrawer(f)} className={`cursor-pointer transition-colors hover:bg-surface-bright ${index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface'}`}>
                 <td className={`${cell} font-label-md text-label-md text-on-surface-variant`}>{index + 1}</td>
                 <td className={`${cell} font-medium text-on-surface`}>{f.name}</td>
@@ -142,18 +142,18 @@ export default function AttorneyFirms() {
                 <td className={`${cell} text-on-surface-variant`}>{f.tax_no || '-'}</td>
                 <td className={`${cell} text-on-surface-variant`}>{f.email || '-'}</td>
                 <td className={cell}>
-                  <CountToggle count={count} open={expanded.open.has(f.id)} onToggle={() => expanded.toggle(f.id)} />
+                  <CountToggle count={count} onClick={() => setPanel({ name: f.name, patents: stat?.patents ?? [] })} />
                 </td>
                 <td className={cell}>
                   <RowActions onEdit={() => setDrawer(f)} onDelete={() => del.setTarget(f)} />
                 </td>
               </tr>
-              {expanded.open.has(f.id) && stat && count > 0 && <PatentsRow colSpan={7} patents={stat.patents} onOpen={(id) => navigate(`/patents/${id}`)} />}
-            </Fragment>
+
           )
         })}
       </TableCard>
 
+      {panel && <SummaryDrawer title={panel.name} patents={panel.patents} onClose={() => setPanel(null)} onOpenPatent={(id) => navigate(`/patents/${id}`)} />}
       {drawer && (
         <FirmDrawer
           key={drawer === 'new' ? 'new' : drawer.id}

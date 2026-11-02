@@ -43,3 +43,17 @@ def test_attorney_firms_summary_counts_and_zero_listed(client, db, make_patent):
     assert [(f["name"], f["patent_count"]) for f in got] == [("Grup Ofis", 0), ("Simaj", 2)]
     assert [p["title"] for p in got[1]["patents"]] == ["Y", "X"]  # id sırası
     assert client.get("/api/attorney_firms/1").status_code in (200, 404)  # /summary, /{id} ile çakışmaz
+
+
+def test_applicants_summary_counts_active_only_zero_included_and_sorted(client, db, make_patent):
+    db.add_all([Applicant(full_name="Zeynep"), Applicant(full_name="Çağla"), Applicant(full_name="Ali")])
+    db.commit()
+    ids = {a.full_name: a.id for a in db.query(Applicant)}
+    p1 = add(db, make_patent, "B", applicant_id=ids["Çağla"])
+    p2 = add(db, make_patent, "A", applicant_id=ids["Çağla"])
+    add(db, make_patent, "Silinmiş", applicant_id=ids["Çağla"], deleted=True)
+    got = client.get("/api/applicants/summary").json()
+    assert [(a["full_name"], a["patent_count"]) for a in got] == [("Ali", 0), ("Çağla", 2), ("Zeynep", 0)]
+    assert got[1]["patents"] == [{"id": p1.id, "title": "B"}, {"id": p2.id, "title": "A"}]
+    assert got[0]["patents"] == [] and set(got[0]) == {"id", "full_name", "patent_count", "patents"}
+    assert client.get(f"/api/applicants/{ids['Ali']}").status_code == 200  # /summary, /{id} ile çakışmaz

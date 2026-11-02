@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 
 from app.core.deps import DbSession, ItemId
-from app.schemas import ErrorResponse, ApplicantIn, ApplicantRead
+from app.schemas import ApplicantSummary, ErrorResponse, ApplicantIn, ApplicantRead
 from app.services import applicants as service
+from app.services import summaries
 
 router = APIRouter(prefix="/applicants", tags=["applicants"])
 
@@ -10,6 +11,11 @@ router = APIRouter(prefix="/applicants", tags=["applicants"])
 @router.get("", response_model=list[ApplicantRead])
 def list_applicants(db: DbSession):
     return service.list_applicants(db)
+
+
+@router.get("/summary", response_model=list[ApplicantSummary])
+def applicants_summary(db: DbSession):
+    return summaries.applicants_summary(db)
 
 
 @router.post("", response_model=ApplicantRead, status_code=201, responses={409: {"model": ErrorResponse}})

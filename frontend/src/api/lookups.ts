@@ -1,6 +1,7 @@
 import { request } from './client'
 import type {
   ApplicantIn,
+  ApplicantSummary,
   ApplicantRead,
   AttorneyFirmIn,
   AttorneyFirmRead,
@@ -41,3 +42,4 @@ export const listPartners = (signal?: AbortSignal) => request<PartnerSummary[]>(
 export const listDepartmentSummary = (signal?: AbortSignal) => request<LookupSummary[]>('GET', '/departments/summary', { signal })
 export const listAttorneyFirmSummary = (signal?: AbortSignal) =>
   request<LookupSummary[]>('GET', '/attorney_firms/summary', { signal })
+export const listApplicantSummary = (signal?: AbortSignal) => request<ApplicantSummary[]>('GET', '/applicants/summary', { signal })

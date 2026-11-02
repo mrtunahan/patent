@@ -18,7 +18,7 @@ from app.schemas.patent import (
     PatentRead,
 )
 from app.schemas.setting import SettingsMap
-from app.schemas.summary import LookupSummary, PartnerSummary, PatentRef
+from app.schemas.summary import ApplicantSummary, LookupSummary, PartnerSummary, PatentRef
 
 __all__ = [
     "ApplicantIn", "ApplicantRead", "ApplicantRef",
@@ -26,7 +26,7 @@ __all__ = [
     "DepartmentIn", "DepartmentRead",
     "DuplicateWarning", "ErrorResponse",
     "FsmhTypeIn", "FsmhTypeRead",
-    "LookupSummary", "NamedRef", "Page", "PartnerSummary", "PatentRef",
+    "ApplicantSummary", "LookupSummary", "NamedRef", "Page", "PartnerSummary", "PatentRef",
     "PatentFilterQuery", "PatentIn", "PatentListQuery", "PatentListResponse", "PatentRead",
     "SettingsMap", "UtcDatetime",
 ]

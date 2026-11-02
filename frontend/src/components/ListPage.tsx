@@ -152,41 +152,19 @@ export function StatusPill({ active }: { active: boolean }) {
   )
 }
 
-// Patent sayısı düğmesi: tıklayınca satırın altında patent başlıkları açılır / kapanır (satır tıklamasını tetiklemez).
-export function CountToggle({ count, open, onToggle }: { count: number; open: boolean; onToggle: () => void }) {
+// Patent sayısı düğmesi: tıklayınca sağdan özet paneli açılır (satır tıklamasını tetiklemez). 0 iken de tıklanabilir.
+export function CountToggle({ count, onClick }: { count: number; onClick: () => void }) {
   return (
     <button
       type="button"
-      disabled={count === 0}
-      aria-expanded={open}
-      title={count === 0 ? undefined : open ? 'Patentleri gizle' : 'Patentleri göster'}
+      title="Patentleri göster"
       onClick={(event) => {
         event.stopPropagation()
-        onToggle()
+        onClick()
       }}
-      className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-full bg-secondary-container px-space-sm py-1 font-label-md text-label-md font-semibold text-on-secondary-container transition-colors enabled:hover:bg-surface-container-high disabled:bg-surface-container-highest disabled:text-on-surface-variant"
+      className="inline-flex min-w-[44px] items-center justify-center rounded-full bg-secondary-container px-space-sm py-1 font-label-md text-label-md font-semibold text-on-secondary-container transition-colors hover:bg-surface-container-high"
     >
       {count}
-      {count > 0 && <Icon name={open ? 'expand_less' : 'expand_more'} className="text-[16px]" />}
     </button>
-  )
-}
-
-// Açılan satır: patent başlıkları; başlığa tıklayınca /patents/{id} (liste sayfası + düzenleme çekmecesi).
-export function PatentsRow({ colSpan, patents, onOpen }: { colSpan: number; patents: { id: number; title: string }[]; onOpen: (id: number) => void }) {
-  return (
-    <tr className="bg-surface-container-low">
-      <td colSpan={colSpan} className="px-space-md py-space-sm">
-        <ul className="flex flex-col gap-1">
-          {patents.map((patent) => (
-            <li key={patent.id}>
-              <button type="button" onClick={() => onOpen(patent.id)} className="text-left font-body-md text-body-md text-primary hover:underline">
-                {patent.title}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </td>
-    </tr>
   )
 }
