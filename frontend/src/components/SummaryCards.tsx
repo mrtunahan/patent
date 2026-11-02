@@ -13,12 +13,12 @@ interface Summary {
 const count = (params: Parameters<typeof listPatents>[0], signal: AbortSignal) =>
   listPatents({ ...params, page_size: 1 }, signal).then((page) => page.total)
 
-function Card({ title, icon, iconClass, children }: { title: string; icon: string; iconClass: string; children: React.ReactNode }) {
+function Card({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
   return (
-    <div className="relative flex min-w-0 flex-col justify-between overflow-hidden rounded-xl bg-surface-container p-space-md shadow-sm">
+    <div className="relative flex min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-primary-container/30 bg-surface-container-lowest p-space-md shadow-card">
       <div className="flex items-center justify-between">
-        <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">{title}</span>
-        <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconClass}`}>
+        <span className="emboss-text rounded-full border border-primary-container/40 bg-primary-fixed px-space-md py-1 font-label-sm text-label-sm font-semibold uppercase tracking-wider text-on-primary-fixed shadow-emboss">{title}</span>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary shadow-md">
           <Icon name={icon} className="text-[20px]" />
         </div>
       </div>
@@ -56,16 +56,16 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
 
   return (
     <div className="grid grid-cols-1 gap-space-md sm:grid-cols-2">
-      <Card title="Toplam Kayıt" icon="folder_special" iconClass="bg-primary-fixed text-on-primary-fixed">
+      <Card title="Toplam Başvuru Dosyası" icon="folder_special">
         <div className="mt-space-md flex items-baseline gap-space-sm">
           <span className="font-display-lg text-display-lg font-bold tracking-tight text-on-surface">{value(summary?.total)}</span>
           <span className="font-label-md text-label-md text-on-surface-variant">aktif kayıt</span>
         </div>
         {error && <span className="mt-space-sm font-label-sm text-label-sm text-error">Özet yüklenemedi.</span>}
-        <div className="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-primary/5" />
+        <div className="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-primary/10" />
       </Card>
-      <Card title="Türe Göre" icon="category" iconClass="bg-secondary-fixed text-on-secondary-fixed">
-        <ul className="mt-space-md grid grid-cols-2 gap-x-space-md gap-y-space-xs">
+      <Card title="Türe Göre" icon="category">
+        <ul className="mt-space-md grid grid-cols-1 gap-x-space-md min-[420px]:grid-cols-2 gap-y-space-xs">
           {(summary?.byType ?? fsmhTypes?.map((type) => ({ id: type.id, name: type.name, count: undefined })) ?? []).map((item) => (
             <li key={item.id} className="flex items-center justify-between gap-space-sm font-label-md text-label-md text-on-surface">
               <span className="flex min-w-0 items-center gap-space-xs">
@@ -76,7 +76,7 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
             </li>
           ))}
         </ul>
-        <div className="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-secondary/5" />
+        <div className="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-primary/10" />
       </Card>
     </div>
   )

@@ -177,6 +177,8 @@ sqlite3 data/patent.db ".backup 'data/source/patent-yedek-YYYYMMDD.db'"
 
 Ayrıntılı teknik kararlar yukarıdaki "Onaylanan Kararlar" bölümündedir.
 
+- **Görünüm (Adım 13):** özet kartları çerçeveli/gölgeli, başlıkları kabartmalı mor hap içinde; sayfa zemini `surface-container-low`, kart, filtre ve tablo kabukları ince çerçeve ve `shadow-card` kullanır (`tailwind.config.js` `boxShadow`, `index.css` `.emboss-text`). Veri ve davranış değişmedi.
+
 ## Madde 13 doğrulama matrisi
 
 | Gereksinim (Madde 13) | Kanıt | Durum |

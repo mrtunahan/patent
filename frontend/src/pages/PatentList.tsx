@@ -199,7 +199,7 @@ export default function PatentList() {
 
       <FilterBar filters={filters} lookups={lookups} total={data?.total ?? null} onChange={updateFilters} onReset={resetFilters} />
 
-      <div className="flex min-w-0 flex-col overflow-hidden rounded-xl bg-surface-container shadow-md">
+      <div className="flex min-w-0 flex-col overflow-hidden rounded-xl bg-surface-container border border-primary-container/30 shadow-card">
         <div className="flex items-center justify-between bg-surface-container-high p-space-md">
           <div className="flex items-center gap-space-sm">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary">

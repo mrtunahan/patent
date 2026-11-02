@@ -18,7 +18,7 @@ export default function AppShell() {
   return (
     <ToastProvider>
       <LookupsProvider>
-      <div className="min-h-screen bg-background text-on-surface">
+      <div className="min-h-screen bg-surface-container-low text-on-surface">
         <aside className="flex items-center gap-space-md bg-surface-container-low px-margin-mobile py-space-sm lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:h-full lg:w-64 lg:flex-col lg:items-stretch lg:justify-start lg:gap-space-md lg:px-0 lg:py-space-lg">
           <div className="flex shrink-0 items-center gap-space-sm lg:px-space-lg">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">

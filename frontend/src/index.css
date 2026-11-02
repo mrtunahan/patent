@@ -13,6 +13,11 @@
   }
 }
 
+/* Kabartmalı başlık metni (özet kartı hapı) */
+.emboss-text {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6), 0 -1px 0 rgba(55, 33, 70, 0.12);
+}
+
 /* Material Symbols Outlined: Google Fonts ikon yazı tipi için temel stil */
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';

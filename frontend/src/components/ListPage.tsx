@@ -30,7 +30,7 @@ export function PageHeader({ crumb, title, subtitle, addLabel, onAdd }: { crumb:
 
 export function SearchCard({ value, onChange, placeholder, count }: { value: string; onChange: (v: string) => void; placeholder: string; count: number | null }) {
   return (
-    <div className="flex min-w-0 flex-col gap-space-sm rounded-xl bg-surface-container p-space-md shadow-sm">
+    <div className="flex min-w-0 flex-col gap-space-sm rounded-xl bg-surface-container p-space-md border border-primary-container/30 shadow-card">
       <div className="relative">
         <Icon name="search" className="absolute left-space-md top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant" />
         <input
@@ -74,7 +74,7 @@ export function TableCard({ title, icon, status, errorMessage, isEmpty, colSpan,
     </tr>
   )
   return (
-    <div className="flex min-w-0 flex-col overflow-hidden rounded-xl bg-surface-container shadow-md">
+    <div className="flex min-w-0 flex-col overflow-hidden rounded-xl bg-surface-container border border-primary-container/30 shadow-card">
       <div className="flex items-center gap-space-sm bg-surface-container-high p-space-md">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary">
           <Icon name={icon} className="text-[18px]" />

@@ -6,6 +6,11 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // Adım 13: özet kartı / hap görünümü (yeni renk yok, mevcut tema renkleriyle)
+      boxShadow: {
+        emboss: 'inset 0 1px 0 rgba(255,255,255,0.7), 0 1px 2px rgba(55,33,70,0.18)',
+        card: '0 4px 12px -2px rgba(55,33,70,0.16), 0 2px 4px -2px rgba(55,33,70,0.10)',
+      },
       colors: {
         'on-error-container': '#93000a',
         'on-primary-fixed-variant': '#543e64',

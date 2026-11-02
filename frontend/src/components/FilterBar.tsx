@@ -45,7 +45,7 @@ export default function FilterBar({ filters, lookups, total, onChange, onReset }
     ))
 
   return (
-    <div className="flex min-w-0 flex-col gap-space-md rounded-xl bg-surface-container p-space-md shadow-sm">
+    <div className="flex min-w-0 flex-col gap-space-md rounded-xl bg-surface-container p-space-md border border-primary-container/30 shadow-card">
       <div className="flex flex-col items-stretch gap-space-md lg:flex-row lg:items-center">
         <div className="relative flex-1">
           <Icon name="search" className="absolute left-space-md top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant" />
