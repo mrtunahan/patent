@@ -4,11 +4,13 @@ import type { IdName, LookupSummary, PatentRef } from '../api/types'
 import ConfirmDialog from '../components/ConfirmDialog'
 import DrawerShell from '../components/DrawerShell'
 import { Field, controlClass } from '../components/formStyles'
-import { CountToggle, PageHeader, RowActions, SearchCard, TableCard, cell } from '../components/ListPage'
+import EntityListLayout from '../components/EntityListLayout'
+import { PageHeader } from '../components/ListPage'
+import { wordInitials } from '../lib/format'
 import SummaryModal from '../components/SummaryModal'
 import { useToast } from '../components/Toast'
 import { useLookups } from '../lib/lookups'
-import { describeError, matchesQuery, useList, useRowDelete } from '../lib/hooks'
+import { describeError, useList, useRowDelete } from '../lib/hooks'
 
 function DepartmentDrawer({ record, onClose, onSaved, onDeleteFailed }: { record: IdName | null; onClose: () => void; onSaved: (message: string) => void; onDeleteFailed: (message: string) => void }) {
   const [name, setName] = useState(record?.name ?? '')
@@ -69,10 +71,8 @@ export default function Departments() {
   const { reload: reloadLookups } = useLookups()
   const list = useList(listDepartmentSummary)
   const [panel, setPanel] = useState<Panel | null>(null)
-  const [q, setQ] = useState('')
   const [drawer, setDrawer] = useState<null | 'new' | LookupSummary>(null)
 
-  const visible = (list.items ?? []).filter((d) => matchesQuery(q, d.name))
   // ortak lookup listesi de yenilenir (filtre çubuğu ve patent çekmecesi yeni durumu görsün)
   const refresh = () => {
     list.reload()
@@ -88,39 +88,25 @@ export default function Departments() {
   return (
     <div className="flex min-w-0 flex-col gap-space-lg">
       <PageHeader crumb="Bölümler" title="Bölümler / Birimler" subtitle="Patent kayıtlarında kullanılan bölüm ve birimler" addLabel="Yeni Bölüm Ekle" onAdd={() => setDrawer('new')} />
-      <SearchCard value={q} onChange={setQ} placeholder="Bölüm / birim ara..." count={list.status === 'ready' ? visible.length : null} />
-      <TableCard
+      <EntityListLayout
         title="Bölüm / Birim Listesi"
         icon="domain"
+        searchPlaceholder="Bölüm / birim ara..."
+        items={list.items}
         status={list.status}
         errorMessage={list.errorMessage}
-        isEmpty={visible.length === 0}
-        colSpan={4}
-        minWidth="560px"
         onRetry={list.reload}
-        head={
-          <>
-            <th className={`${cell} w-[80px]`}>No</th>
-            <th className={cell}>Bölüm / Birim Adı</th>
-            <th className={`${cell} w-[140px]`}>Patent Sayısı</th>
-            <th className={`${cell} w-[110px] text-center`}>İşlemler</th>
-          </>
-        }
-      >
-        {visible.map((d, index) => (
-            <tr onClick={() => setDrawer(d)} className={`cursor-pointer transition-colors hover:bg-surface-bright ${index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface'}`}>
-              <td className={`${cell} font-label-md text-label-md text-on-surface-variant`}>{index + 1}</td>
-              <td className={`${cell} font-medium text-on-surface`}>{d.name}</td>
-              <td className={cell}>
-                <CountToggle count={d.patent_count} onClick={() => setPanel({ name: d.name, kind: 'Bölüm / Birim', patents: d.patents })} />
-              </td>
-              <td className={cell}>
-                <RowActions onEdit={() => setDrawer(d)} onDelete={() => del.setTarget(d)} />
-              </td>
-            </tr>
-
-        ))}
-      </TableCard>
+        rowKey={(d) => d.id}
+        nameHeader="Bölüm / Birim Adı"
+        nameOf={(d) => d.name}
+        searchTexts={(d) => [d.name]}
+        countOf={(d) => d.patent_count}
+        patentsOf={(d) => d.patents}
+        monogramOf={(d) => wordInitials(d.name)}
+        onSummary={(d) => setPanel({ name: d.name, kind: 'Bölüm / Birim', patents: d.patents })}
+        onEdit={setDrawer}
+        onDelete={del.setTarget}
+      />
 
       {panel && <SummaryModal name={panel.name} kind={panel.kind} patents={panel.patents} onClose={() => setPanel(null)} />}
       {drawer && (

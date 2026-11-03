@@ -31,7 +31,7 @@ export default function ConfirmDialog({ open, title, message, confirmLabel, tone
         className="w-full max-w-md rounded-xl bg-surface-container-high p-space-lg shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        {title && <h3 className="font-title-md text-title-md text-on-surface">{title}</h3>}
+        {title && <h3 className="font-headline-sm text-title-md font-bold tracking-tight text-on-surface">{title}</h3>}
         <p className="mt-space-sm font-body-md text-body-md text-on-surface-variant">{message}</p>
         <div className="mt-space-lg flex justify-end gap-space-sm">
           <button

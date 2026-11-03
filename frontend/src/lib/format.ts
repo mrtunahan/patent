@@ -49,6 +49,14 @@ export function initials(name: string): string {
   return pick.toLocaleUpperCase('tr')
 }
 
+// Bölüm / firma / ortak monogramı: ilk iki kelimenin baş harfi; tek kelimede ilk iki harf.
+export function wordInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return '?'
+  const pick = words.length === 1 ? Array.from(words[0]).slice(0, 2).join('') : words.slice(0, 2).map((w) => Array.from(w)[0]).join('')
+  return pick.toLocaleUpperCase('tr')
+}
+
 // Addan deterministik avatar rengi (tema tonları).
 const AVATAR_TONES = [
   'bg-primary-fixed text-on-primary-fixed',

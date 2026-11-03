@@ -65,7 +65,7 @@ export default function DrawerShell({
               <Icon name={icon} className="text-[22px]" />
             </div>
             <div className="flex flex-col">
-              <h2 className="font-headline-sm text-headline-sm text-on-surface">{title}</h2>
+              <h2 className="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">{title}</h2>
               <span className="font-label-sm text-label-sm text-on-surface-variant">{subtitle}</span>
             </div>
           </div>

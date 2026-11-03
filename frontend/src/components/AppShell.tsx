@@ -41,14 +41,14 @@ export default function AppShell() {
     <ToastProvider>
       <LookupsProvider>
       <div className="min-h-screen bg-surface-container-low text-on-surface">
-        <aside className={`flex items-center gap-space-md bg-surface-container-low px-margin-mobile py-space-sm transition-[width] duration-300 lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:h-full lg:flex-col lg:items-stretch lg:justify-start lg:gap-space-md lg:overflow-hidden lg:px-0 lg:py-space-lg ${collapsed ? 'lg:w-16' : 'lg:w-64'}`}>
+        <aside className={`flex items-center gap-space-md bg-primary px-margin-mobile py-space-sm text-on-primary transition-[width] duration-300 lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:h-full lg:flex-col lg:items-stretch lg:justify-start lg:gap-space-md lg:overflow-hidden lg:px-0 lg:py-space-lg ${collapsed ? 'lg:w-16' : 'lg:w-64'}`}>
           <div className={`flex shrink-0 items-center gap-space-sm ${collapsed ? 'lg:justify-center lg:px-0' : 'lg:px-space-lg'}`}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <Icon name="account_balance" className="text-[22px] text-on-primary" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-fixed">
+              <Icon name="account_balance" className="text-[22px] text-on-primary-fixed" />
             </div>
             <div className={`flex flex-col ${hide}`}>
-              <span className="font-title-sm text-title-sm leading-none tracking-tight text-on-surface">TTO PORTAL</span>
-              <span className="font-label-sm text-label-sm text-on-surface-variant">Patent &amp; FSMH Takibi</span>
+              <span className="font-title-sm text-title-sm leading-none tracking-tight text-on-primary">TTO PORTAL</span>
+              <span className="font-label-sm text-label-sm text-on-primary-container">Patent &amp; FSMH Takibi</span>
             </div>
           </div>
           <div className={`min-w-0 flex-1 lg:flex-none lg:pt-space-sm ${collapsed ? 'lg:px-space-xs' : 'lg:px-space-md'}`}>
@@ -58,7 +58,7 @@ export default function AppShell() {
               title={collapsed ? 'Menüyü aç' : 'Menüyü kapat'}
               aria-label={collapsed ? 'Menüyü aç' : 'Menüyü kapat'}
               aria-expanded={!collapsed}
-              className={`mb-space-xs hidden h-10 items-center gap-space-sm rounded-lg px-space-md font-label-lg text-label-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface lg:flex ${collapsed ? 'justify-center px-0' : ''}`}
+              className={`mb-space-xs hidden h-10 items-center gap-space-sm rounded-lg px-space-md font-label-lg text-label-lg text-on-primary-container transition-colors hover:bg-primary-container hover:text-on-primary lg:flex ${collapsed ? 'justify-center px-0' : ''}`}
             >
               <Icon name={collapsed ? 'menu' : 'menu_open'} className="text-[22px]" />
               <span className={`font-label-sm text-label-sm uppercase tracking-wider ${hide}`}>Menü</span>
@@ -75,8 +75,8 @@ export default function AppShell() {
                     const active = isActive || (item.to === '/' && pathname.startsWith('/patents'))
                     return `flex shrink-0 items-center gap-space-sm whitespace-nowrap rounded-lg px-space-md py-space-sm font-label-lg text-label-lg transition-colors ${collapsed ? 'lg:justify-center lg:px-0' : ''} ${
                       active
-                        ? 'bg-primary-container text-on-primary-container'
-                        : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                        ? 'bg-primary-fixed text-on-primary-fixed'
+                        : 'text-primary-fixed-dim hover:bg-primary-container hover:text-on-primary'
                     }`
                   }}
                 >

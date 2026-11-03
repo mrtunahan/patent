@@ -209,6 +209,13 @@ Ayrıntılı teknik kararlar yukarıdaki "Onaylanan Kararlar" bölümündedir.
 | Özet uçları (ortaklar, bölüm, vekil firma, başvuru sahibi) | `tests/test_summaries.py` | Tamam |
 | Madde 6/6 tarih biçimi (ISO / GG.AA.YYYY) | `test_schemas.py`; arayüzde `lib/format.ts` (elle) | Tamam |
 
+## Adım 15: yazı tipi ve modül liste görünümleri
+
+- **Yazı tipi:** başlıklar (sayfa/kart/çekmece/pencere başlıkları, büyük sayı, özet penceresi adı) Source Serif 4 (600/700), gövde ve tüm kontroller Inter; ikisi de Google Fonts `<link>` ile yüklenir (latin-ext dahil, `display=swap`), yeni NPM bağımlılığı yoktur. Aileler yalnızca `tailwind.config.js` içinde (`serif-head`, `sans-body`) tanımlıdır; mevcut `font-*` sınıf adları bunlara bağlanır. Manrope kaldırıldı.
+- **Dört modül ortak liste görünümü:** Bölümler, Başvuru Sahipleri, Vekil Firmalar ve Ortaklar `components/EntityListLayout` kullanır: filtre kartı (arama, sıralama menüsü, Temizle, kayıt sayısı), tablo kartı ve istemci tarafı sayfalama (10/25/50/100, varsayılan 25). Modül sayfalarında istatistik kartı yoktur.
+- **Tür Dağılımı** ayrı bir uçtan değil, mevcut özet uçlarındaki `patents[].fsmh_type_name` değerlerinden istemcide hesaplanır.
+- Kenar çubuğu koyu erik zeminlidir.
+
 ## Yol haritası
 
 - a) Pasife alma yönlendirmesi (Madde 6/2): silme engelinde başvuru sahibi / vekil firma için `is_active=false` önerisi.

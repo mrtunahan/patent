@@ -157,7 +157,7 @@ export default function PatentList() {
             <Icon name="chevron_right" className="text-[14px]" />
             <span className="font-semibold text-primary">Patent Takip</span>
           </div>
-          <h1 className="mt-space-xs font-headline-lg text-headline-lg tracking-tight text-on-surface">Patent Takip Listesi</h1>
+          <h1 className="mt-space-xs font-headline-lg text-headline-lg font-bold tracking-tight text-on-surface">Patent Takip Listesi</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">Patent / FSMH başvurularının takip listesi</p>
         </div>
         <div className="flex flex-wrap items-center gap-space-sm self-start lg:self-auto">
@@ -199,7 +199,7 @@ export default function PatentList() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-md">
             <Icon name="view_timeline" className="text-[20px]" />
           </div>
-          <span className="font-title-sm text-title-sm font-bold text-on-surface">Fikri Hak Portföy Kütüğü</span>
+          <span className="font-title-lg text-title-lg font-bold tracking-tight text-on-surface">Fikri Hak Portföy Kütüğü</span>
         </div>
         <PatentTable
           items={data?.items ?? null}

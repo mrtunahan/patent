@@ -64,7 +64,7 @@ export default function SummaryModal({ name, kind, patents, onClose }: Props) {
             <div className="flex min-w-0 items-center gap-space-md">
               <Avatar name={name} size="lg" />
               <div className="flex min-w-0 flex-col">
-                <h2 className="break-words font-headline-sm text-headline-sm text-on-surface">{name}</h2>
+                <h2 className="break-words font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">{name}</h2>
                 {kind && <span className="font-label-md text-label-md text-on-surface-variant">{kind}</span>}
               </div>
             </div>

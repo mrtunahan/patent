@@ -4,11 +4,13 @@ import type { ApplicantRead, DepartmentRead, PatentRef } from '../api/types'
 import ConfirmDialog from '../components/ConfirmDialog'
 import DrawerShell from '../components/DrawerShell'
 import { Field, controlClass } from '../components/formStyles'
-import { CountToggle, PageHeader, RowActions, SearchCard, TableCard, cell } from '../components/ListPage'
+import EntityListLayout from '../components/EntityListLayout'
+import { PageHeader } from '../components/ListPage'
+import { initials } from '../lib/format'
 import SummaryModal from '../components/SummaryModal'
 import { useToast } from '../components/Toast'
 import { useLookups } from '../lib/lookups'
-import { describeError, matchesQuery, useList, useRowDelete } from '../lib/hooks'
+import { describeError, useList, useRowDelete } from '../lib/hooks'
 
 function ApplicantDrawer({ record, departments, onClose, onSaved, onDeleteFailed }: { record: ApplicantRead | null; departments: DepartmentRead[]; onClose: () => void; onSaved: (message: string) => void; onDeleteFailed: (message: string) => void }) {
   const [name, setName] = useState(record?.full_name ?? '')
@@ -88,12 +90,10 @@ export default function Applicants() {
   const list = { items: applicants.items, status: applicants.status === 'ready' && summary.status !== 'ready' ? summary.status : applicants.status, errorMessage: applicants.errorMessage || summary.errorMessage, reload: () => { applicants.reload(); summary.reload() } }
   const stats = useMemo(() => new Map((summary.items ?? []).map((x) => [x.id, x])), [summary.items])
   const [panel, setPanel] = useState<Panel | null>(null)
-  const [q, setQ] = useState('')
   const [drawer, setDrawer] = useState<null | 'new' | ApplicantRead>(null)
 
   const departmentName = useMemo(() => new Map((lookups?.departments ?? []).map((d) => [d.id, d.name])), [lookups])
   const nameOf = (a: ApplicantRead) => (a.department_id ? departmentName.get(a.department_id) ?? '' : '')
-  const visible = (list.items ?? []).filter((a) => matchesQuery(q, a.full_name, nameOf(a)))
   // ortak lookup listesi de yenilenir (filtre çubuğu ve patent çekmecesi yeni durumu görsün)
   const refresh = () => {
     list.reload()
@@ -109,40 +109,32 @@ export default function Applicants() {
   return (
     <div className="flex min-w-0 flex-col gap-space-lg">
       <PageHeader crumb="Başvuru Sahipleri" title="Başvuru Sahipleri" subtitle="Patent / FSMH başvurularının sahipleri" addLabel="Yeni Başvuru Sahibi Ekle" onAdd={() => setDrawer('new')} />
-      <SearchCard value={q} onChange={setQ} placeholder="Ad veya bölüm ara..." count={list.status === 'ready' ? visible.length : null} />
-      <TableCard
+      <EntityListLayout
         title="Başvuru Sahibi Listesi"
         icon="person"
+        searchPlaceholder="Ad veya bölüm ara..."
+        items={list.items}
         status={list.status}
         errorMessage={list.errorMessage}
-        isEmpty={visible.length === 0}
-        colSpan={5}
-        minWidth="720px"
         onRetry={list.reload}
-        head={
-          <>
-            <th className={`${cell} w-[80px]`}>No</th>
-            <th className={`${cell} w-[240px]`}>Ad Soyad</th>
-            <th className={cell}>Bölüm</th>
-            <th className={`${cell} w-[140px]`}>Patent Sayısı</th>
-            <th className={`${cell} w-[110px] text-center`}>İşlemler</th>
-          </>
-        }
-      >
-        {visible.map((a, index) => (
-          <tr key={a.id} onClick={() => setDrawer(a)} className={`cursor-pointer transition-colors hover:bg-surface-bright ${index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface'}`}>
-            <td className={`${cell} font-label-md text-label-md text-on-surface-variant`}>{index + 1}</td>
-            <td className={`${cell} font-medium text-on-surface`}>{a.full_name}</td>
-            <td className={`${cell} text-on-surface-variant`}>{nameOf(a) || '-'}</td>
-            <td className={cell}>
-              <CountToggle count={stats.get(a.id)?.patent_count ?? 0} onClick={() => setPanel({ name: a.full_name, kind: nameOf(a), patents: stats.get(a.id)?.patents ?? [] })} />
-            </td>
-            <td className={cell}>
-              <RowActions onEdit={() => setDrawer(a)} onDelete={() => del.setTarget(a)} />
-            </td>
-          </tr>
-        ))}
-      </TableCard>
+        rowKey={(a) => a.id}
+        nameHeader="Ad Soyad"
+        nameOf={(a) => a.full_name}
+        searchTexts={(a) => [a.full_name, nameOf(a)]}
+        countOf={(a) => stats.get(a.id)?.patent_count ?? 0}
+        patentsOf={(a) => stats.get(a.id)?.patents ?? []}
+        monogramOf={(a) => initials(a.full_name)}
+        extraColumns={[
+          {
+            header: 'Bölüm',
+            render: (a) =>
+              nameOf(a) ? <span className="rounded-full bg-surface-container-high px-space-sm py-0.5 font-label-md text-label-md text-on-surface-variant">{nameOf(a)}</span> : '-',
+          },
+        ]}
+        onSummary={(a) => setPanel({ name: a.full_name, kind: nameOf(a), patents: stats.get(a.id)?.patents ?? [] })}
+        onEdit={setDrawer}
+        onDelete={del.setTarget}
+      />
 
       {panel && <SummaryModal name={panel.name} kind={panel.kind} patents={panel.patents} onClose={() => setPanel(null)} />}
       {drawer && (
