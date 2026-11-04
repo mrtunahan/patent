@@ -27,6 +27,9 @@ const selectClass =
 export default function FilterBar({ filters, lookups, total, onChange, onReset }: Props) {
   const [qInput, setQInput] = useState(filters.q)
 
+  // Arama dışarıdan (üst çubuk, Temizle) değişirse kutu da güncellenir.
+  useEffect(() => setQInput(filters.q), [filters.q])
+
   // 300 ms debounce: yazım durunca arama filtreye işlenir.
   useEffect(() => {
     if (qInput === filters.q) return

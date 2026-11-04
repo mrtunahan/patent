@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useMatch, useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useMatch, useNavigate, useParams } from 'react-router-dom'
 import { ApiError, isAbort } from '../api/client'
 import { exportPatents, listPatents, removePatent } from '../api/patents'
 import type { Page, PatentListParams, PatentRead, SortDir, SortField } from '../api/types'
@@ -18,6 +18,7 @@ const toNumber = (value: string) => (value ? Number(value) : undefined)
 
 export default function PatentList() {
   const navigate = useNavigate()
+  const location = useLocation()
   const toast = useToast()
   const { id } = useParams()
   const isNew = useMatch('/patents/new') !== null
@@ -84,6 +85,14 @@ export default function PatentList() {
     setFilters((prev) => ({ ...prev, ...patch }))
     setPage(1)
   }, [])
+  // Üst çubuktaki aramadan gelindiyse aramayı filtreye uygula (diğer filtreler temizlenir).
+  const headerSearch = (location.state as { search?: string; at?: number } | null) ?? null
+  useEffect(() => {
+    if (headerSearch?.search === undefined) return
+    setFilters({ ...EMPTY_FILTERS, q: headerSearch.search })
+    setPage(1)
+  }, [headerSearch?.at]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const resetFilters = useCallback(() => {
     setFilters(EMPTY_FILTERS)
     setPage(1)
