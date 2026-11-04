@@ -59,6 +59,15 @@ function translateValidation(item: ValidationItem): string {
   }
 }
 
+// Ana sisteme (Offline Asistan) gömülü çalışırken yetki kapısı ve proxy yanıtları JSON gövdesi taşımaz.
+const GATEWAY_MESSAGES: Record<number, string> = {
+  401: 'Oturum bulunamadı. Offline Asistan üzerinden yeniden giriş yapın.',
+  403: 'Bu ekran için Patent & FSMH yöneticisi yetkisi gerekir.',
+  502: 'Patent Takip sunucusuna ulaşılamadı.',
+  503: 'Patent Takip sunucusu şu an hizmet veremiyor.',
+  504: 'Patent Takip sunucusu zamanında yanıt vermedi.',
+}
+
 function toApiError(status: number, data: unknown): ApiError {
   const body = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>
   const detail = body.detail
@@ -79,6 +88,7 @@ function toApiError(status: number, data: unknown): ApiError {
     }
     return new ApiError(status, 'Girilen bilgilerde hata var. Lütfen alanları kontrol edin.', { fieldErrors })
   }
+  if (GATEWAY_MESSAGES[status]) return new ApiError(status, GATEWAY_MESSAGES[status])
   return new ApiError(status, `Beklenmeyen bir hata oluştu (HTTP ${status}).`)
 }
 

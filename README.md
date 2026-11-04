@@ -97,6 +97,17 @@ sqlite3 data/patent.db ".backup 'data/source/patent-yedek-YYYYMMDD.db'"
 
 > **Uyarı:** `VITE_BASE_PATH` build zamanında `index.html` ve asset yollarına gömülür. Değeri değiştirirseniz `npm run build` yeniden alınmalıdır. `VITE_BASE_PATH` ve `ROOT_PATH`, proxy'nin dışarıya sunduğu alt yolla tutarlı olmalıdır.
 
+### Offline Asistan entegrasyonu (Patent & FSMH modülü)
+
+Şartnamede (Madde 11, B9) sonraya bırakılan entegrasyon biçimi: **reverse proxy + iframe**. Uygulama ve veritabanı (`data/patent.db`) burada kalır; ana sisteme veri kopyalanmaz.
+
+- Offline Asistan (mrtunahan/erasmus_caku) aynı alan adında `/patent/` yolunu nginx ile bu uygulamaya iletir. `.env`: `HOST=127.0.0.1`, `ROOT_PATH=/patent`, `VITE_BASE_PATH=/patent/`, `FRAME_ANCESTORS="'self'"`, `CORS_ORIGINS=` (boş).
+- **Kimlik/yetki ana sistemdedir** (Madde 1): nginx `/patent/` altındaki her isteği (sayfa, varlık, API) `auth_request` ile Offline Asistan'ın `GET /api/patent/yetki` ucuna sorar; yalnız üniversite yetkilisinin atadığı Patent & FSMH yöneticisi geçer, diğerleri 401/403 alır. Bu uygulamaya giriş ekranı eklenmedi. nginx blokları ve kurulum: erasmus_caku `ssl-setup/nginx-domain.conf`, `dagitim/DAGITIM.md`.
+- Modüldeki "Patent & FSMH Takibi →" düğmesi uygulamayı tam sayfa iframe'de açar. Gömülüyken (`window.self !== window.top`) kenar menüde **Buluş Bildirimleri**, başlıkta **Offline Asistan'a dön** düğmesi görünür; ana sayfaya yalnız aynı kökene `postMessage({ kaynak: 'patent-takip', tip: 'don' | 'bildirimler' })` gönderir. Tek başına açıldığında görünmezler.
+- Modülde kabul edilen buluş bildirimi bu uygulamanın kendi API'sine kayıt olarak gönderilir (`POST /api/patents`; başvuru sahibi, bölüm ve tür adla eşlenir, yoksa açılır; mükerrer uyarısında var olan kayıt kullanılır).
+- Yetki kapısının yanıtları JSON taşımaz; arayüz 401/403/502-504'ü anlaşılır Türkçe mesaja çevirir (`frontend/src/api/client.ts`).
+- Yerel geliştirmede yetki kapısı yoktur (nginx yok); uygulama önceki gibi bağımsız çalışır.
+
 ### Bilinen sınırlamalar
 
 - Kimlik doğrulama yoktur; uygulamaya erişen herkes tüm işlemleri yapabilir (şartname gereği).

@@ -29,6 +29,21 @@ function readCollapsed(): boolean {
   }
 }
 
+// Ana sisteme (Offline Asistan > Patent & FSMH modülü) aynı kökenden iframe ile gömülü mü?
+// Gömülüyken "Buluş Bildirimleri" ve "Offline Asistan'a dön" düğmeleri görünür; ana sayfaya
+// postMessage ile haber verir (yalnız aynı köken hedeflenir, ana sayfa da kaynağı denetler).
+const EMBEDDED = (() => {
+  try {
+    return window.self !== window.top
+  } catch {
+    return true // farklı kökenli üst pencereye erişim hata verir: yine de gömülüdür
+  }
+})()
+const MESSAGE_SOURCE = 'patent-takip'
+function notifyHost(tip: 'don' | 'bildirimler') {
+  window.parent.postMessage({ kaynak: MESSAGE_SOURCE, tip }, window.location.origin)
+}
+
 const today = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
 
 export default function AppShell() {
@@ -102,6 +117,34 @@ export default function AppShell() {
                 )
               })}
             </nav>
+            {EMBEDDED && (
+              <button
+                type="button"
+                onClick={() => notifyHost('don')}
+                title="Offline Asistan'a dön"
+                aria-label="Offline Asistan'a dön"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface text-on-surface-variant shadow-raised lg:hidden"
+              >
+                <Icon name="logout" className="text-[18px]" />
+              </button>
+            )}
+
+            {EMBEDDED && (
+              <div className="mb-4 mt-6 hidden flex-col gap-3 lg:flex">
+                <div className={`px-2 ${hide}`}>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Offline Asistan</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => notifyHost('bildirimler')}
+                  title="Buluş Bildirimleri"
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-on-surface-variant shadow-raised transition-all duration-200 hover:text-on-surface ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}
+                >
+                  <Icon name="inbox" className="text-[20px]" />
+                  <span className={hide}>Buluş Bildirimleri</span>
+                </button>
+              </div>
+            )}
 
             <div className={`mt-auto hidden rounded-xl bg-surface p-4 shadow-inset lg:block ${collapsed ? 'lg:p-3' : ''}`}>
               <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
@@ -133,6 +176,17 @@ export default function AppShell() {
                   <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                   <span className="text-primary">{current?.label ?? 'Patent Takip'}</span>
                 </div>
+                {EMBEDDED && (
+                  <button
+                    type="button"
+                    onClick={() => notifyHost('don')}
+                    title="Offline Asistan'a dön"
+                    aria-label="Offline Asistan'a dön"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface text-on-surface-variant shadow-raised transition-colors hover:text-error"
+                  >
+                    <Icon name="logout" className="text-[18px]" />
+                  </button>
+                )}
               </div>
             </header>
             <main className="min-w-0 px-margin-mobile pb-12 pt-space-lg sm:px-8 lg:pt-28">
