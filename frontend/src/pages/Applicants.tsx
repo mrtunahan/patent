@@ -128,7 +128,7 @@ export default function Applicants() {
           {
             header: 'Bölüm',
             render: (a) =>
-              nameOf(a) ? <span className="rounded-full bg-surface-container-high px-space-sm py-0.5 font-label-md text-label-md text-on-surface-variant">{nameOf(a)}</span> : '-',
+              nameOf(a) ? <span className="rounded-lg bg-surface px-space-sm py-0.5 font-label-md text-label-md text-on-surface-variant shadow-inset-sm">{nameOf(a)}</span> : '-',
           },
         ]}
         onSummary={(a) => setPanel({ name: a.full_name, kind: nameOf(a), patents: stats.get(a.id)?.patents ?? [] })}

@@ -152,12 +152,12 @@ export default function PatentList() {
     <div className="flex min-w-0 flex-col gap-space-lg">
       <div className="flex flex-col justify-between gap-space-md lg:flex-row lg:items-center">
         <div className="flex flex-col">
-          <div className="flex items-center gap-space-xs font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">
-            <span>TTO Portalı</span>
+          <div className="flex items-center gap-space-xs text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant lg:hidden">
+            <span>TTO Otomasyonu</span>
             <Icon name="chevron_right" className="text-[14px]" />
             <span className="font-semibold text-primary">Patent Takip</span>
           </div>
-          <h1 className="mt-space-xs font-headline-lg text-headline-lg font-bold tracking-tight text-on-surface">Patent Takip Listesi</h1>
+          <h1 className="mt-space-xs text-2xl font-semibold tracking-tight lg:mt-0 lg:text-3xl text-on-surface">Patent Takip Listesi</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">Patent / FSMH başvurularının takip listesi</p>
         </div>
         <div className="flex flex-wrap items-center gap-space-sm self-start lg:self-auto">
@@ -165,15 +165,15 @@ export default function PatentList() {
             type="button"
             onClick={() => void runExport()}
             disabled={exporting}
-            className="flex h-10 items-center justify-center gap-space-xs rounded-lg bg-secondary-container px-space-lg font-label-lg text-label-lg text-on-secondary-container transition-colors hover:bg-surface-container-high disabled:opacity-60"
+            className="flex h-10 items-center justify-center gap-space-xs rounded-xl bg-surface px-space-lg font-label-lg text-label-lg font-semibold text-on-surface shadow-raised transition-all hover:shadow-raised-sm active:shadow-inset-sm disabled:opacity-60"
           >
-            <Icon name="table_view" className="text-[20px]" />
+            <Icon name="table_view" className="text-[20px] text-secondary" />
             {exporting ? 'Hazırlanıyor...' : 'Excel Dışa Aktar'}
           </button>
           <button
             type="button"
             onClick={() => navigate('/patents/new')}
-            className="flex h-10 items-center justify-center gap-space-xs rounded-lg bg-primary px-space-lg font-label-lg text-label-lg text-on-primary shadow-md transition-all hover:bg-primary/95"
+            className="flex h-10 items-center justify-center gap-space-xs rounded-xl bg-surface px-space-lg font-label-lg text-label-lg font-semibold text-primary shadow-raised transition-all hover:shadow-raised-sm active:shadow-inset-sm"
           >
             <Icon name="add_circle" className="text-[20px]" />
             Yeni Patent Ekle
@@ -184,9 +184,9 @@ export default function PatentList() {
       <SummaryCards fsmhTypes={lookups?.fsmhTypes ?? null} refreshKey={refreshKey} />
 
       {lookupError && (
-        <div role="alert" className="flex items-center justify-between gap-space-md rounded-lg bg-error-container p-space-sm font-body-md text-body-md text-on-error-container">
+        <div role="alert" className="flex items-center justify-between gap-space-md rounded-xl bg-error-container p-space-sm font-body-md text-body-md text-on-error-container">
           <span>Filtre listeleri yüklenemedi.</span>
-          <button type="button" onClick={() => void reloadLookups().catch(() => {})} className="rounded-lg bg-primary px-space-md py-space-xs font-label-md text-label-md text-on-primary">
+          <button type="button" onClick={() => void reloadLookups().catch(() => {})} className="rounded-xl bg-surface px-space-md py-space-xs font-label-md text-label-md font-semibold text-primary shadow-raised-sm">
             Yeniden dene
           </button>
         </div>
@@ -194,12 +194,12 @@ export default function PatentList() {
 
       <FilterBar filters={filters} lookups={lookups} total={data?.total ?? null} onChange={updateFilters} onReset={resetFilters} />
 
-      <div className="flex min-w-0 flex-col overflow-hidden rounded-xl bg-surface-container border border-primary-container/30 shadow-card">
-        <div className="flex items-center gap-space-sm bg-surface-container-high p-space-md">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-md">
+      <div className="flex min-w-0 flex-col overflow-hidden rounded-xl bg-surface shadow-raised">
+        <div className="flex items-center gap-space-sm bg-surface p-space-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface text-primary shadow-inset-sm">
             <Icon name="view_timeline" className="text-[20px]" />
           </div>
-          <span className="font-title-lg text-title-lg font-bold tracking-tight text-on-surface">Fikri Hak Portföy Kütüğü</span>
+          <span className="font-title-md text-title-md font-semibold text-on-surface">Fikri Hak Portföy Kütüğü</span>
         </div>
         <PatentTable
           items={data?.items ?? null}

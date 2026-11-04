@@ -65,7 +65,7 @@ export default function LookupField({ id, text, value, options, emptyLabel, disa
           aria-label={`${text}: yeni ekle`}
           disabled={disabled}
           onClick={() => (open ? close() : setOpen(true))}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary-container text-on-secondary-container transition-colors hover:bg-surface-container-lowest disabled:opacity-50"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-primary shadow-raised-sm transition-colors hover:text-primary-container disabled:opacity-50"
         >
           <Icon name="add" className="text-[20px]" />
         </button>
@@ -94,10 +94,10 @@ export default function LookupField({ id, text, value, options, emptyLabel, disa
               }}
               className={`h-9 min-w-0 flex-1 px-space-sm ${controlClass}`}
             />
-            <button type="button" disabled={busy || !name.trim()} onClick={() => void add()} className="h-9 rounded-lg bg-primary px-space-md font-label-md text-label-md text-on-primary disabled:opacity-50">
+            <button type="button" disabled={busy || !name.trim()} onClick={() => void add()} className="h-9 rounded-xl bg-surface px-space-md font-label-md text-label-md font-semibold text-primary shadow-raised-sm disabled:opacity-50">
               {busy ? 'Ekleniyor...' : 'Ekle'}
             </button>
-            <button type="button" disabled={busy} onClick={close} className="h-9 rounded-lg bg-surface-container px-space-md font-label-md text-label-md text-on-surface hover:bg-surface-container-lowest disabled:opacity-50">
+            <button type="button" disabled={busy} onClick={close} className="h-9 rounded-xl bg-surface px-space-md font-label-md text-label-md text-on-surface-variant shadow-raised-sm hover:text-on-surface disabled:opacity-50">
               İptal
             </button>
           </div>

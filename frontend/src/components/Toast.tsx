@@ -26,11 +26,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        className={`pointer-events-none fixed bottom-6 right-6 z-[70] flex max-w-[calc(100vw-3rem)] items-center gap-space-sm rounded-xl bg-inverse-surface px-space-lg py-space-md font-label-lg text-label-lg text-inverse-on-surface shadow-xl transition-all duration-300 ${
+        className={`pointer-events-none fixed bottom-6 right-6 z-[70] flex max-w-[calc(100vw-3rem)] items-center gap-space-sm rounded-xl border border-indigo-700 bg-indigo-900/90 px-4 py-3 text-sm text-indigo-200 shadow-xl backdrop-blur-md transition-all duration-300 ${
           visible ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0'
         }`}
       >
-        <Icon name="check_circle" className="text-[20px] text-tertiary-fixed" />
+        <Icon name="check_circle" className="text-[20px] text-indigo-200" />
         <span>{message}</span>
       </div>
     </ToastContext.Provider>

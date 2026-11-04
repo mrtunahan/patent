@@ -14,8 +14,8 @@ const count = (params: Parameters<typeof listPatents>[0], signal: AbortSignal) =
   listPatents({ ...params, page_size: 1 }, signal).then((page) => page.total)
 
 const pillClass =
-  'emboss-text inline-flex items-center gap-space-xs rounded-full border border-primary-container/40 bg-primary-fixed px-space-md py-1 font-label-sm text-label-sm font-semibold uppercase tracking-wider text-on-primary-fixed shadow-emboss'
-const cardClass = 'relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-primary-container/30 bg-surface-container-lowest p-space-md shadow-card'
+  'emboss-text inline-flex items-center gap-space-xs rounded-full bg-surface px-space-md py-1 text-[11px] font-semibold uppercase tracking-wider text-primary shadow-inset-sm'
+const cardClass = 'relative flex min-w-0 flex-col overflow-hidden rounded-xl bg-surface p-5 shadow-card'
 
 export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: FsmhTypeRead[] | null; refreshKey: number }) {
   const [summary, setSummary] = useState<Summary | null>(null)
@@ -56,13 +56,12 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
             Toplam Başvuru Dosyası
           </span>
         </div>
-        <div className="mt-space-md flex items-baseline gap-space-sm border-t border-primary-container/20 pt-space-md">
-          <span className="font-display-lg text-display-lg font-bold tracking-tight text-on-surface">{value(summary?.total)}</span>
+        <div className="mt-space-md flex items-baseline gap-space-sm border-t border-surface-variant/40 pt-space-md">
+          <span className="text-4xl font-semibold tracking-tight text-primary">{value(summary?.total)}</span>
           <span className="font-label-md text-label-md font-semibold text-on-surface-variant">Aktif Dosya</span>
         </div>
         <p className="mt-space-xs font-label-sm text-label-sm text-on-surface-variant">Takip listesindeki aktif başvuru kayıtları</p>
         {error && <span className="mt-space-sm font-label-sm text-label-sm text-error">Özet yüklenemedi.</span>}
-        <div className="pointer-events-none absolute -bottom-6 -right-6 h-28 w-28 rounded-full bg-primary/10" />
       </div>
 
       <div className={cardClass}>
@@ -73,7 +72,7 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
           </span>
           <span className="font-label-md text-label-md text-on-surface-variant">· {fsmhTypes?.length ?? 0} kategori</span>
         </div>
-        <ul className="mt-space-md grid grid-cols-1 gap-x-space-lg gap-y-space-md border-t border-primary-container/20 pt-space-md md:grid-cols-2">
+        <ul className="mt-space-md grid grid-cols-1 gap-x-space-lg gap-y-space-md border-t border-surface-variant/40 pt-space-md md:grid-cols-2">
           {rows.map((item) => {
             const style = typeStyle(item.name)
             const share = item.count === undefined ? 0 : total > 0 ? (item.count / total) * 100 : 0
@@ -89,11 +88,11 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
                     {item.count !== undefined && <span className="font-label-sm text-label-sm text-on-surface-variant">%{percent(item.count, total)}</span>}
                   </span>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface shadow-inset-sm">
                   <div className={`h-full rounded-full ${style.dot}`} style={{ width: `${share}%` }} />
                 </div>
                 {leader?.id === item.id && (
-                  <span className="self-start rounded-full bg-primary-fixed px-space-sm py-0.5 font-label-sm text-label-sm font-semibold text-on-primary-fixed">
+                  <span className="self-start rounded-full bg-surface px-space-sm py-0.5 font-label-sm text-label-sm font-semibold text-tertiary shadow-inset-sm">
                     %{percent(item.count ?? 0, total)} Portföy Lideri
                   </span>
                 )}
@@ -101,12 +100,11 @@ export default function SummaryCards({ fsmhTypes, refreshKey }: { fsmhTypes: Fsm
             )
           })}
         </ul>
-        <div className="mt-space-md flex items-center justify-between border-t border-primary-container/20 pt-space-sm font-label-md text-label-md text-on-surface-variant">
+        <div className="mt-space-md flex items-center justify-between border-t border-surface-variant/40 pt-space-sm font-label-md text-label-md text-on-surface-variant">
           <span>
             Toplam <strong className="text-on-surface">{value(summary?.total)}</strong> kayıt
           </span>
         </div>
-        <div className="pointer-events-none absolute -bottom-6 -right-6 h-28 w-28 rounded-full bg-primary/10" />
       </div>
     </div>
   )
