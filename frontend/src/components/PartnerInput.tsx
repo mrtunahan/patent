@@ -52,7 +52,7 @@ export default function PartnerInput({ value, onChange, disabled, error }: Props
           type="button"
           onClick={add}
           disabled={disabled || !draft.trim()}
-          className="flex h-10 items-center gap-space-xs rounded-lg bg-secondary-container px-space-md font-label-lg text-label-lg text-on-secondary-container transition-colors hover:bg-surface-container disabled:opacity-50"
+          className="flex h-10 items-center gap-space-xs rounded-xl bg-surface px-space-md font-label-lg text-label-lg font-semibold text-primary shadow-raised-sm transition-colors hover:text-primary-container disabled:opacity-50"
         >
           <Icon name="add" className="text-[18px]" />
           Ekle
@@ -64,7 +64,7 @@ export default function PartnerInput({ value, onChange, disabled, error }: Props
           {value.map((name, index) => (
             <li
               key={`${name}-${index}`}
-              className="flex items-center gap-space-xs rounded-full bg-secondary-container py-1 pl-space-sm pr-1 font-label-md text-label-md text-on-secondary-container"
+              className="flex items-center gap-space-xs rounded-lg bg-surface py-1 pl-space-sm pr-1 font-label-md text-label-md font-medium text-primary shadow-inset-sm"
             >
               {name}
               <button
@@ -72,7 +72,7 @@ export default function PartnerInput({ value, onChange, disabled, error }: Props
                 aria-label={`${name} ortağını çıkar`}
                 disabled={disabled}
                 onClick={() => onChange(value.filter((_, i) => i !== index))}
-                className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-surface-container-high"
+                className="flex h-5 w-5 items-center justify-center rounded-full hover:text-error"
               >
                 <Icon name="close" className="text-[14px]" />
               </button>

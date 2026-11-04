@@ -57,29 +57,29 @@ export default function SummaryModal({ name, kind, patents, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-space-md">
-      <div className="absolute inset-0 bg-inverse-surface/40 backdrop-blur-[2px]" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-label={name} className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-surface-container-high shadow-2xl">
-        <div className="flex flex-col gap-space-md bg-surface-container-highest p-space-lg">
+      <div className="absolute inset-0 bg-on-surface/20 backdrop-blur-sm" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label={name} className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-surface shadow-modal">
+        <div className="flex flex-col gap-space-md bg-surface p-6 shadow-header">
           <div className="flex items-start justify-between gap-space-md">
             <div className="flex min-w-0 items-center gap-space-md">
               <Avatar name={name} size="lg" />
               <div className="flex min-w-0 flex-col">
-                <h2 className="break-words font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">{name}</h2>
+                <h2 className="break-words text-lg font-semibold text-on-surface">{name}</h2>
                 {kind && <span className="font-label-md text-label-md text-on-surface-variant">{kind}</span>}
               </div>
             </div>
-            <button type="button" onClick={onClose} aria-label="Kapat" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container">
-              <Icon name="close" className="text-[24px]" />
+            <button type="button" onClick={onClose} aria-label="Kapat" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface text-on-surface-variant shadow-raised-sm transition-colors hover:text-on-surface">
+              <Icon name="close" className="text-[20px]" />
             </button>
           </div>
           <div className="flex flex-wrap gap-space-xs">
-            <span className={`${chipBase} bg-primary text-on-primary`}>{patents.length} Toplam Dosya</span>
+            <span className={`${chipBase} bg-surface text-primary shadow-inset-sm`}>{patents.length} Toplam Dosya</span>
             {PATENT_STATUSES.map((status) => (
               <span key={status} className={`${chipBase} ${statusStyle(status)}`}>
                 {counts.byStatus.get(status) ?? 0} {status}
               </span>
             ))}
-            {counts.unset > 0 && <span className={`${chipBase} bg-surface-container text-on-surface-variant`}>{counts.unset} Durum Girilmemiş</span>}
+            {counts.unset > 0 && <span className={`${chipBase} bg-surface text-on-surface-variant shadow-inset-sm`}>{counts.unset} Durum Girilmemiş</span>}
           </div>
         </div>
 
@@ -92,7 +92,7 @@ export default function SummaryModal({ name, kind, patents, onClose }: Props) {
               onChange={(event) => setQ(event.target.value)}
               placeholder="Başlıkta ara..."
               aria-label="Başlıkta ara"
-              className="h-10 w-full rounded-lg border border-on-surface/80 bg-surface-container-lowest pl-11 pr-space-md font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="h-10 w-full rounded-xl bg-surface pl-11 pr-space-md font-body-md text-body-md text-on-surface shadow-inset placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
           <div className="flex flex-wrap gap-space-xs">
@@ -102,7 +102,7 @@ export default function SummaryModal({ name, kind, patents, onClose }: Props) {
                 type="button"
                 aria-pressed={type === value}
                 onClick={() => setType(value)}
-                className={`${chipBase} border transition-colors ${type === value ? 'border-transparent bg-primary text-on-primary' : 'border-on-surface/30 bg-surface-container-lowest text-on-surface hover:bg-surface-bright'}`}
+                className={`${chipBase} bg-surface transition-all ${type === value ? 'text-primary shadow-inset-sm' : 'text-on-surface-variant shadow-raised-sm hover:text-on-surface'}`}
               >
                 {label} {count}
               </button>
@@ -122,7 +122,7 @@ export default function SummaryModal({ name, kind, patents, onClose }: Props) {
                 const expanded = open.has(patent.id)
                 const year = patent.application_date?.slice(0, 4)
                 return (
-                  <li key={patent.id} className={`overflow-hidden rounded-xl border-l-4 bg-surface-container-lowest shadow-sm ${style.stripe}`}>
+                  <li key={patent.id} className={`overflow-hidden rounded-xl border-l-4 bg-surface shadow-raised ${style.stripe}`}>
                     <div className="flex items-center gap-space-sm p-space-sm">
                       <span aria-hidden className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg font-label-md text-label-md font-bold ${style.box}`}>
                         {patent.fsmh_type_name.slice(0, 2).toLocaleUpperCase('tr')}
@@ -133,21 +133,21 @@ export default function SummaryModal({ name, kind, patents, onClose }: Props) {
                         {patent.status && <span className={`rounded-full px-space-sm py-0.5 font-label-sm text-label-sm font-semibold ${statusStyle(patent.status)}`}>{patent.status}</span>}
                         {year && <span className="font-label-sm text-label-sm text-on-surface-variant">{year}</span>}
                       </button>
-                      <button type="button" aria-label={expanded ? 'Daralt' : 'Genişlet'} onClick={() => toggle(patent.id)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container">
+                      <button type="button" aria-label={expanded ? 'Daralt' : 'Genişlet'} onClick={() => toggle(patent.id)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface text-on-surface-variant shadow-raised-sm hover:text-primary">
                         <Icon name={expanded ? 'expand_less' : 'expand_more'} className="text-[22px]" />
                       </button>
                     </div>
                     {expanded && (
-                      <div className="flex flex-wrap items-end gap-space-sm border-t border-outline-variant/40 p-space-sm">
-                        <div className="min-w-[140px] rounded-lg bg-surface-container px-space-md py-space-xs">
+                      <div className="flex flex-wrap items-end gap-space-sm border-t border-surface-variant/40 p-space-sm">
+                        <div className="min-w-[140px] rounded-xl bg-surface px-space-md py-space-xs shadow-inset-sm">
                           <div className="font-label-sm text-label-sm text-on-surface-variant">Başvuru Tarihi</div>
                           <div className="font-label-lg text-label-lg text-on-surface">{formatDate(patent.application_date)}</div>
                         </div>
-                        <div className="min-w-[140px] rounded-lg bg-surface-container px-space-md py-space-xs">
+                        <div className="min-w-[140px] rounded-xl bg-surface px-space-md py-space-xs shadow-inset-sm">
                           <div className="font-label-sm text-label-sm text-on-surface-variant">Tescil Tarihi</div>
                           <div className="font-label-lg text-label-lg text-on-surface">{formatDate(patent.registration_date)}</div>
                         </div>
-                        <button type="button" onClick={() => go(`/patents/${patent.id}`)} className="ml-auto flex h-10 items-center gap-space-xs rounded-lg bg-primary px-space-md font-label-lg text-label-lg text-on-primary transition-colors hover:bg-primary/95">
+                        <button type="button" onClick={() => go(`/patents/${patent.id}`)} className="ml-auto flex h-10 items-center gap-space-xs rounded-xl bg-surface px-space-md font-label-lg text-label-lg font-semibold text-primary shadow-raised transition-all hover:shadow-raised-sm active:shadow-inset-sm">
                           <Icon name="edit" className="text-[18px]" />
                           Düzenle
                         </button>
@@ -160,11 +160,11 @@ export default function SummaryModal({ name, kind, patents, onClose }: Props) {
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-space-sm bg-surface-container-highest p-space-lg">
-          <button type="button" onClick={onClose} className="h-10 rounded-lg bg-surface-container px-space-md font-label-lg text-label-lg text-on-surface transition-colors hover:bg-surface-container-lowest">
+        <div className="flex items-center justify-between gap-space-sm bg-surface p-6 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
+          <button type="button" onClick={onClose} className="h-10 rounded-xl bg-surface px-space-md font-label-lg text-label-lg font-medium text-on-surface-variant shadow-raised-sm transition-colors hover:text-on-surface">
             Kapat
           </button>
-          <button type="button" onClick={() => go('/patents/new')} className="flex h-10 items-center gap-space-xs rounded-lg bg-primary px-space-md font-label-lg text-label-lg text-on-primary shadow-md transition-colors hover:bg-primary/95">
+          <button type="button" onClick={() => go('/patents/new')} className="flex h-10 items-center gap-space-xs rounded-xl bg-surface px-space-md font-label-lg text-label-lg font-semibold text-primary shadow-raised transition-all hover:shadow-raised-sm active:shadow-inset-sm">
             <Icon name="add_circle" className="text-[18px]" />
             Yeni Patent Ekle
           </button>

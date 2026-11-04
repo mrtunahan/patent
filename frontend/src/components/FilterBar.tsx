@@ -22,10 +22,13 @@ interface Props {
 }
 
 const selectClass =
-  'h-11 w-full min-w-0 cursor-pointer rounded-lg bg-surface-container-lowest px-space-md font-label-lg text-label-lg text-on-surface focus:outline-none'
+  'h-11 w-full min-w-0 cursor-pointer rounded-xl bg-surface shadow-inset px-space-md font-label-lg text-label-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30'
 
 export default function FilterBar({ filters, lookups, total, onChange, onReset }: Props) {
   const [qInput, setQInput] = useState(filters.q)
+
+  // Arama dışarıdan (üst çubuk, Temizle) değişirse kutu da güncellenir.
+  useEffect(() => setQInput(filters.q), [filters.q])
 
   // 300 ms debounce: yazım durunca arama filtreye işlenir.
   useEffect(() => {
@@ -42,7 +45,7 @@ export default function FilterBar({ filters, lookups, total, onChange, onReset }
     ))
 
   return (
-    <div className="flex min-w-0 flex-col gap-space-md rounded-xl bg-surface-container p-space-md border border-primary-container/30 shadow-card">
+    <div className="flex min-w-0 flex-col gap-space-md rounded-xl bg-surface p-5 shadow-card">
       <div className="flex flex-col items-stretch gap-space-md lg:flex-row lg:items-center">
         <div className="relative flex-1">
           <Icon name="search" className="absolute left-space-md top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant" />
@@ -52,7 +55,7 @@ export default function FilterBar({ filters, lookups, total, onChange, onReset }
             onChange={(event) => setQInput(event.target.value)}
             placeholder="Buluş başlığı, başvuru sahibi, ortak veya not ara..."
             aria-label="Ara"
-            className="h-11 w-full rounded-lg bg-surface-container-lowest pl-11 pr-space-md font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:bg-surface-bright focus:outline-none"
+            className="h-11 w-full rounded-xl bg-surface shadow-inset pl-11 pr-space-md font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
         <button
@@ -62,7 +65,7 @@ export default function FilterBar({ filters, lookups, total, onChange, onReset }
             onReset()
           }}
           title="Filtreleri Temizle"
-          className="flex h-11 items-center justify-center gap-space-xs rounded-lg bg-secondary-container px-space-md font-label-md text-label-md text-on-secondary-container transition-colors hover:bg-surface-container-high"
+          className="flex h-11 items-center justify-center gap-space-xs rounded-xl bg-surface px-space-md font-label-md text-label-md font-semibold text-secondary shadow-raised-sm transition-colors hover:text-on-surface"
         >
           <Icon name="clear_all" className="text-[18px]" />
           Temizle
@@ -86,7 +89,7 @@ export default function FilterBar({ filters, lookups, total, onChange, onReset }
 
       <div className="flex flex-wrap items-center gap-space-sm pt-space-xs font-label-sm text-label-sm text-on-surface-variant">
         <span className="font-medium text-on-surface">Aktif Veri Görünümü:</span>
-        <span className="rounded-full bg-surface-container-high px-space-sm py-0.5 text-on-surface">
+        <span className="rounded-lg bg-surface px-2.5 py-1 font-medium text-primary shadow-inset-sm">
           Kayıt: <strong>{total ?? '-'}</strong>
         </span>
       </div>

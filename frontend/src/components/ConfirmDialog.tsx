@@ -22,23 +22,23 @@ export default function ConfirmDialog({ open, title, message, confirmLabel, tone
   }, [open, onCancel])
 
   if (!open) return null
-  const confirmClass = tone === 'danger' ? 'bg-error text-on-error' : 'bg-primary text-on-primary'
+  const confirmClass = tone === 'danger' ? 'bg-error text-on-error' : 'bg-surface text-primary shadow-raised'
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-inverse-surface/50 p-space-md" onClick={onCancel}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-on-surface/20 p-space-md backdrop-blur-sm" onClick={onCancel}>
       <div
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-md rounded-xl bg-surface-container-high p-space-lg shadow-2xl"
+        className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-modal"
         onClick={(event) => event.stopPropagation()}
       >
-        {title && <h3 className="font-headline-sm text-title-md font-bold tracking-tight text-on-surface">{title}</h3>}
+        {title && <h3 className="text-base font-semibold text-on-surface">{title}</h3>}
         <p className="mt-space-sm font-body-md text-body-md text-on-surface-variant">{message}</p>
         <div className="mt-space-lg flex justify-end gap-space-sm">
           <button
             type="button"
             onClick={onCancel}
             disabled={busy}
-            className="h-10 rounded-lg bg-surface-container px-space-md font-label-lg text-label-lg text-on-surface transition-colors hover:bg-surface-container-lowest disabled:opacity-50"
+            className="h-10 rounded-xl bg-surface px-space-md font-label-lg text-label-lg font-medium text-on-surface-variant shadow-raised-sm transition-colors hover:text-on-surface disabled:opacity-50"
           >
             Vazgeç
           </button>
@@ -46,7 +46,7 @@ export default function ConfirmDialog({ open, title, message, confirmLabel, tone
             type="button"
             onClick={onConfirm}
             disabled={busy}
-            className={`h-10 rounded-lg px-space-lg font-label-lg text-label-lg shadow-md transition-all hover:opacity-95 disabled:opacity-50 ${confirmClass}`}
+            className={`h-10 rounded-xl px-space-lg font-label-lg text-label-lg font-semibold transition-all hover:opacity-95 disabled:opacity-50 ${confirmClass}`}
           >
             {busy ? 'İşleniyor...' : confirmLabel}
           </button>

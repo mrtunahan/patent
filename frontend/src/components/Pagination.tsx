@@ -19,7 +19,7 @@ function pageNumbers(page: number, last: number): number[] {
 }
 
 const navButton =
-  'flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container-high text-on-surface transition-colors hover:bg-surface-container-highest disabled:opacity-50'
+  'flex h-8 w-8 items-center justify-center rounded-lg bg-surface text-on-surface-variant shadow-raised-sm transition-all hover:text-primary disabled:cursor-not-allowed disabled:opacity-50'
 
 export default function Pagination({ page, pageSize, total, onPage, onPageSize }: Props) {
   const last = Math.max(1, Math.ceil(total / pageSize))
@@ -27,14 +27,14 @@ export default function Pagination({ page, pageSize, total, onPage, onPageSize }
   const to = Math.min(page * pageSize, total)
 
   return (
-    <div className="flex flex-col items-center justify-between gap-space-md bg-surface-container p-space-md font-label-md text-label-md text-on-surface-variant sm:flex-row">
+    <div className="flex flex-col items-center justify-between gap-space-md bg-surface-container-low px-6 py-4 font-label-md text-label-md text-on-surface-variant sm:flex-row">
       <div className="flex flex-wrap items-center gap-space-sm">
         <span>Sayfa Başına Göster:</span>
         <select
           aria-label="Sayfa başına kayıt"
           value={pageSize}
           onChange={(event) => onPageSize(Number(event.target.value))}
-          className="h-8 rounded bg-surface-container-highest px-space-sm font-semibold text-on-surface focus:outline-none"
+          className="h-8 rounded-lg bg-surface px-space-sm font-semibold text-on-surface shadow-inset-sm focus:outline-none"
         >
           {PAGE_SIZES.map((size) => (
             <option key={size} value={size}>
@@ -58,7 +58,7 @@ export default function Pagination({ page, pageSize, total, onPage, onPageSize }
             onClick={() => onPage(n)}
             className={
               n === page
-                ? 'flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-on-primary'
+                ? 'flex h-8 w-8 items-center justify-center rounded-lg bg-surface font-semibold text-primary shadow-inset-sm'
                 : navButton
             }
           >

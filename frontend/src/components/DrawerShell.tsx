@@ -48,29 +48,29 @@ export default function DrawerShell({
   return (
     <>
       <div
-        className={`fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-[2px] transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 z-50 bg-on-surface/20 backdrop-blur-sm transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
         onClick={close}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-2xl flex-col justify-between overflow-hidden bg-surface-container-high shadow-2xl transition-transform duration-300 ease-out ${
+        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-2xl flex-col justify-between overflow-hidden bg-surface shadow-modal transition-transform duration-300 ease-out ${
           visible ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between bg-surface-container-highest p-space-lg">
+        <div className="flex items-center justify-between bg-surface p-6 shadow-header">
           <div className="flex items-center gap-space-sm">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-on-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-primary shadow-inset-sm">
               <Icon name={icon} className="text-[22px]" />
             </div>
             <div className="flex flex-col">
-              <h2 className="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">{title}</h2>
+              <h2 className="text-lg font-semibold text-on-surface">{title}</h2>
               <span className="font-label-sm text-label-sm text-on-surface-variant">{subtitle}</span>
             </div>
           </div>
-          <button type="button" onClick={close} aria-label="Kapat" className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container">
-            <Icon name="close" className="text-[24px]" />
+          <button type="button" onClick={close} aria-label="Kapat" className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface text-on-surface-variant shadow-raised-sm transition-colors hover:text-on-surface">
+            <Icon name="close" className="text-[20px]" />
           </button>
         </div>
 
@@ -81,10 +81,10 @@ export default function DrawerShell({
             event.preventDefault()
             onSubmit()
           }}
-          className="flex flex-1 flex-col gap-space-lg overflow-y-auto p-space-lg"
+          className="flex flex-1 flex-col gap-space-lg overflow-y-auto p-6"
         >
           {error && (
-            <div role="alert" className="flex items-start gap-space-sm rounded-lg bg-error-container p-space-sm font-body-md text-body-md text-on-error-container">
+            <div role="alert" className="flex items-start gap-space-sm rounded-xl bg-error-container p-space-sm font-body-md text-body-md text-on-error-container">
               <Icon name="error" className="mt-0.5 text-[20px]" />
               <span>{error}</span>
             </div>
@@ -92,19 +92,19 @@ export default function DrawerShell({
           {loading ? <p className="text-on-surface-variant">Yükleniyor...</p> : children}
         </form>
 
-        <div className="flex items-center justify-between gap-space-sm bg-surface-container-highest p-space-lg">
+        <div className="flex items-center justify-between gap-space-sm bg-surface p-6 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-space-sm">
-            <button type="button" onClick={close} disabled={saving} className="h-10 rounded-lg bg-surface-container px-space-md font-label-lg text-label-lg text-on-surface transition-colors hover:bg-surface-container-lowest disabled:opacity-50">
+            <button type="button" onClick={close} disabled={saving} className="h-10 rounded-xl bg-surface px-space-md font-label-lg text-label-lg font-medium text-on-surface-variant shadow-raised-sm transition-colors hover:text-on-surface disabled:opacity-50">
               Vazgeç
             </button>
             {!isNew && (
-              <button type="button" onClick={() => setConfirmDelete(true)} disabled={busy} className="flex h-10 items-center gap-space-xs rounded-lg px-space-md font-label-lg text-label-lg text-error transition-colors hover:bg-error-container disabled:opacity-50">
+              <button type="button" onClick={() => setConfirmDelete(true)} disabled={busy} className="flex h-10 items-center gap-space-xs rounded-xl bg-surface px-space-md font-label-lg text-label-lg font-medium text-error shadow-raised-sm transition-colors hover:opacity-80 disabled:opacity-50">
                 <Icon name="delete" className="text-[18px]" />
                 Sil
               </button>
             )}
           </div>
-          <button type="submit" form={formId} disabled={busy} className="flex h-10 items-center gap-space-xs rounded-lg bg-primary px-space-lg font-label-lg text-label-lg text-on-primary shadow-md transition-all hover:bg-primary/95 disabled:opacity-60">
+          <button type="submit" form={formId} disabled={busy} className="flex h-10 items-center gap-space-xs rounded-xl bg-surface px-space-lg font-label-lg text-label-lg font-semibold text-primary shadow-raised transition-all hover:shadow-raised-sm active:shadow-inset-sm disabled:opacity-60">
             <Icon name="check" className="text-[18px]" />
             {saving ? 'Kaydediliyor...' : 'Kaydet'}
           </button>

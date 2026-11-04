@@ -15,7 +15,7 @@ const SORT_OPTIONS: { mode: SortMode; label: string }[] = [
 ]
 
 const cell = 'px-space-md py-space-md'
-const iconButton = 'flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant transition-colors'
+const iconButton = 'flex h-8 w-8 items-center justify-center rounded-lg bg-surface text-on-surface-variant shadow-raised-sm transition-all'
 
 export interface ExtraColumn<T> {
   header: string
@@ -105,7 +105,7 @@ export default function EntityListLayout<T>(props: Props<T>) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-space-sm rounded-xl border border-outline-variant bg-surface-container-lowest p-space-md">
+      <div className="flex flex-wrap items-center gap-space-sm rounded-xl bg-surface p-5 shadow-card">
         <div className="relative min-w-[220px] flex-1">
           <Icon name="search" className="absolute left-space-md top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant" />
           <input
@@ -117,7 +117,7 @@ export default function EntityListLayout<T>(props: Props<T>) {
             }}
             placeholder={props.searchPlaceholder}
             aria-label="Ara"
-            className="h-10 w-full rounded-lg border border-on-surface/80 bg-surface-container-lowest pl-11 pr-space-md font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="h-10 w-full rounded-xl bg-surface pl-11 pr-space-md font-body-md text-body-md text-on-surface shadow-inset placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
         <div ref={menuRef} className="relative">
@@ -128,12 +128,12 @@ export default function EntityListLayout<T>(props: Props<T>) {
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-on-surface/80 bg-surface-container-lowest text-on-surface transition-colors hover:bg-surface-container-low"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-on-surface-variant shadow-raised-sm transition-colors hover:text-primary"
           >
             <Icon name="swap_vert" className="text-[20px]" />
           </button>
           {menuOpen && (
-            <div role="menu" className="absolute left-0 top-12 z-20 min-w-[170px] rounded-lg border border-outline-variant bg-surface-container-lowest py-space-xs shadow-card">
+            <div role="menu" className="absolute left-0 top-12 z-20 min-w-[170px] rounded-xl bg-surface py-space-xs shadow-modal">
               {SORT_OPTIONS.map((option) => (
                 <button
                   key={option.mode}
@@ -145,7 +145,7 @@ export default function EntityListLayout<T>(props: Props<T>) {
                     setPage(1)
                     setMenuOpen(false)
                   }}
-                  className={`flex w-full items-center gap-space-sm px-space-md py-space-sm text-left font-label-lg text-label-lg transition-colors hover:bg-surface-container-low ${sort === option.mode ? 'font-semibold text-primary' : 'text-on-surface'}`}
+                  className={`flex w-full items-center gap-space-sm px-space-md py-space-sm text-left font-label-lg text-label-lg transition-colors hover:bg-surface-bright/60 ${sort === option.mode ? 'font-semibold text-primary' : 'text-on-surface'}`}
                 >
                   <Icon name="check" className={`text-[18px] ${sort === option.mode ? '' : 'invisible'}`} />
                   {option.label}
@@ -158,24 +158,24 @@ export default function EntityListLayout<T>(props: Props<T>) {
           type="button"
           onClick={reset}
           disabled={!filterActive}
-          className="h-10 rounded-lg px-space-md font-label-lg text-label-lg text-primary transition-colors hover:bg-surface-container-low disabled:opacity-50 disabled:hover:bg-transparent"
+          className="h-10 rounded-xl bg-surface px-space-md font-label-lg text-label-lg font-medium text-secondary shadow-raised-sm transition-colors hover:text-on-surface disabled:opacity-50 disabled:shadow-none"
         >
           Temizle
         </button>
         <span className="ml-auto font-label-lg text-label-lg text-on-surface-variant">{status === 'ready' ? `${rows.length} kayıt` : '-'}</span>
       </div>
 
-      <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
-        <div className="flex items-center gap-space-sm border-b border-outline-variant p-space-md">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-on-primary">
+      <div className="flex min-w-0 flex-col overflow-hidden rounded-xl bg-surface shadow-raised">
+        <div className="flex items-center gap-space-sm p-space-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface text-primary shadow-inset-sm">
             <Icon name={props.icon} className="text-[20px]" />
           </div>
-          <span className="font-title-lg text-title-lg font-bold tracking-tight text-on-surface">{props.title}</span>
+          <span className="font-title-md text-title-md font-semibold text-on-surface">{props.title}</span>
         </div>
         <div className="w-full overflow-x-auto">
           <table className="w-full min-w-[820px] border-collapse text-left">
             <thead>
-              <tr className="select-none border-b border-outline-variant bg-surface-container-low font-label-sm text-label-sm font-semibold uppercase tracking-wider text-on-surface">
+              <tr className="select-none bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">
                 <th className={`${cell} w-[70px]`}>No</th>
                 <th className={cell}>{props.nameHeader}</th>
                 {extraColumns.map((col) => (
@@ -193,7 +193,7 @@ export default function EntityListLayout<T>(props: Props<T>) {
                 message(
                   <>
                     <span>{props.errorMessage}</span>
-                    <button type="button" onClick={props.onRetry} className="rounded-lg bg-primary px-space-md py-space-xs font-label-md text-label-md text-on-primary">
+                    <button type="button" onClick={props.onRetry} className="rounded-xl bg-surface px-space-md py-space-xs font-label-md text-label-md font-semibold text-primary shadow-raised-sm">
                       Yeniden dene
                     </button>
                   </>,
@@ -208,7 +208,7 @@ export default function EntityListLayout<T>(props: Props<T>) {
                     <tr
                       key={props.rowKey(item)}
                       onClick={onEdit ? () => onEdit(item) : undefined}
-                      className={`border-b border-outline-variant/60 bg-surface-container-lowest transition-colors hover:bg-surface-container-low ${onEdit ? 'cursor-pointer' : ''}`}
+                      className={`border-b border-surface-variant/30 transition-colors hover:bg-surface-bright/50 ${onEdit ? 'cursor-pointer' : ''}`}
                     >
                       <td className={`${cell} font-label-md text-label-md text-on-surface-variant`}>{offset + index + 1}</td>
                       <td className={cell}>
@@ -233,7 +233,7 @@ export default function EntityListLayout<T>(props: Props<T>) {
                             event.stopPropagation()
                             props.onSummary(item)
                           }}
-                          className={`inline-flex min-w-[44px] items-center justify-center rounded-full px-space-sm py-1 font-label-md text-label-md font-semibold transition-colors ${top ? 'bg-primary text-on-primary hover:bg-primary-container' : 'bg-primary-fixed text-on-primary-fixed hover:bg-primary-fixed-dim'}`}
+                          className={`inline-flex min-w-[44px] items-center justify-center rounded-full bg-surface px-space-sm py-1 font-label-md text-label-md font-semibold shadow-inset-sm transition-colors hover:text-primary-container ${top ? 'text-tertiary' : 'text-primary'}`}
                         >
                           {count}
                         </button>
@@ -249,7 +249,7 @@ export default function EntityListLayout<T>(props: Props<T>) {
                                 event.stopPropagation()
                                 onEdit?.(item)
                               }}
-                              className={`${iconButton} hover:bg-surface-container-high hover:text-on-surface`}
+                              className={`${iconButton} hover:text-primary`}
                             >
                               <Icon name="edit" className="text-[18px]" />
                             </button>
@@ -261,7 +261,7 @@ export default function EntityListLayout<T>(props: Props<T>) {
                                 event.stopPropagation()
                                 onDelete?.(item)
                               }}
-                              className={`${iconButton} hover:bg-error-container hover:text-error`}
+                              className={`${iconButton} hover:text-error`}
                             >
                               <Icon name="delete" className="text-[18px]" />
                             </button>

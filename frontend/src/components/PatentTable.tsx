@@ -57,7 +57,7 @@ const COLUMNS: Column[] = [
     sortField: 'department',
     render: (p) =>
       p.department ? (
-        <span className="inline-block rounded-md bg-surface-container-high px-space-sm py-0.5 font-label-md text-label-md text-on-surface-variant">{p.department.name}</span>
+        <span className="inline-block rounded-lg bg-surface px-space-sm py-0.5 shadow-inset-sm font-label-md text-label-md text-on-surface-variant">{p.department.name}</span>
       ) : (
         dash
       ),
@@ -115,7 +115,7 @@ const th = 'px-space-md py-space-md'
 
 function SortHeader({ column, index, sortBy, sortDir, onSort }: { column: Column; index: number } & Pick<Props, 'sortBy' | 'sortDir' | 'onSort'>) {
   const badge = (
-    <span className="flex h-5 min-w-[22px] shrink-0 items-center justify-center rounded bg-primary px-1 font-label-sm text-[10px] font-bold text-on-primary">
+    <span className="flex h-5 min-w-[22px] shrink-0 items-center justify-center rounded bg-surface px-1 font-label-sm text-[10px] font-bold text-primary shadow-inset-sm">
       {String(index + 1).padStart(2, '0')}
     </span>
   )
@@ -146,7 +146,7 @@ export default function PatentTable({ items, status, errorMessage, page, pageSiz
   const colSpan = VISIBLE.length + 2
   const message = (text: string, action?: ReactNode) => (
     <tr>
-      <td colSpan={colSpan} className="bg-surface-container-lowest px-space-md py-space-xl text-on-surface-variant">
+      <td colSpan={colSpan} className="px-space-md py-space-xl text-on-surface-variant">
         <div className="sticky left-space-md inline-flex flex-wrap items-center gap-space-sm">
           <span>{text}</span>
           {action}
@@ -159,7 +159,7 @@ export default function PatentTable({ items, status, errorMessage, page, pageSiz
     <div className="w-full overflow-x-auto">
       <table className="w-full min-w-[1100px] border-collapse text-left">
         <thead>
-          <tr className="select-none bg-surface-container-highest font-label-sm text-label-sm uppercase tracking-wider text-on-surface">
+          <tr className="select-none bg-surface-container-low text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">
             <th className={`${th} w-[70px]`}>No</th>
             {VISIBLE.map((column, index) => (
               <th key={column.key} aria-sort={ariaSort(column.sortField)} className={`${th} ${column.width}`}>
@@ -173,7 +173,7 @@ export default function PatentTable({ items, status, errorMessage, page, pageSiz
           {status === 'error' &&
             message(
               errorMessage,
-              <button type="button" onClick={onRetry} className="rounded-lg bg-primary px-space-md py-space-xs font-label-md text-label-md text-on-primary">
+              <button type="button" onClick={onRetry} className="rounded-xl bg-surface px-space-md py-space-xs font-label-md text-label-md font-semibold text-primary shadow-raised-sm">
                 Yeniden dene
               </button>,
             )}
@@ -181,7 +181,7 @@ export default function PatentTable({ items, status, errorMessage, page, pageSiz
           {status !== 'error' && items && items.length === 0 && message('Kayıt bulunamadı.')}
           {status !== 'error' &&
             items?.map((patent, index) => (
-              <tr key={patent.id} onClick={() => onEdit(patent.id)} className={`group cursor-pointer transition-colors hover:bg-surface-bright ${index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface'}`}>
+              <tr key={patent.id} onClick={() => onEdit(patent.id)} className={`group cursor-pointer border-b border-surface-variant/30 transition-colors hover:bg-surface-bright/50`}>
                 <td className="px-space-md py-space-md font-label-md text-label-md text-on-surface-variant">{(page - 1) * pageSize + index + 1}</td>
                 {VISIBLE.map((column) => (
                   <td key={column.key} className="px-space-md py-space-md text-on-surface">
@@ -198,7 +198,7 @@ export default function PatentTable({ items, status, errorMessage, page, pageSiz
                         event.stopPropagation()
                         onEdit(patent.id)
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-secondary transition-colors hover:bg-secondary-container"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface text-on-surface-variant shadow-raised-sm transition-all hover:text-primary"
                     >
                       <Icon name="edit" className="text-[18px]" />
                     </button>
@@ -210,7 +210,7 @@ export default function PatentTable({ items, status, errorMessage, page, pageSiz
                         event.stopPropagation()
                         onDelete(patent)
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-error transition-colors hover:bg-error-container"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface text-on-surface-variant shadow-raised-sm transition-all hover:text-error"
                     >
                       <Icon name="delete" className="text-[18px]" />
                     </button>
