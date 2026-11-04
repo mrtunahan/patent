@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Görünüm: Offline Asistan > TTO Modülü > TTO Otomasyonu (neumorfik, açık gri-mavi zemin, indigo vurgu). */
+/* Görünüm: Offline Asistan > TTO Otomasyonu (neumorfik). Palet: #105BFF mavi · #FE8500 turuncu · #F0F0F0 zemin. */
 @layer base {
   html,
   body {
@@ -41,10 +41,10 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #e8eaf0;
+  background: #f0f0f0;
 }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, #6366f1 45%, transparent);
+  background: color-mix(in srgb, #105bff 40%, transparent);
   border-radius: 3px;
 }
 
